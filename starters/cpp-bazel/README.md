@@ -22,6 +22,9 @@ Then:
    or `libstdc++-<ver>-dev` on Debian/Ubuntu). Other platforms: add their
    archives from the same release (`urls`, `sha256`, `strip_prefix`).
 3. **Progress.** In `curriculum.json`: `"progress": { "runner": "bazel" }`.
+   For `verify.sh`, the default `bazel test //...` already fits.
+   The first Bazel command writes `MODULE.bazel.lock`; commit it in the course
+   (`bazel mod deps` creates it without building anything).
 4. **Check it works:**
    ```sh
    bazel test //common/...                            # passes

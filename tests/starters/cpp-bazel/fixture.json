@@ -1,7 +1,7 @@
 {
   "progress": { "runner": "bazel" },
   "verify_cmd": "bazel test //...",
-  "setup": [],
+  "setup": ["bazel mod deps"],
   "stub": "example/prefix_sums/prefix_sums.cc",
   "break": "\nint broken(\n",
   "detects_build_errors": true

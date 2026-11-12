@@ -19,6 +19,7 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
+sys.dont_write_bytecode = True  # no __pycache__ in the learner's repo
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import junit  # noqa: E402
 

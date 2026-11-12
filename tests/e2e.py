@@ -82,8 +82,10 @@ def main():
                     ignore=shutil.ignore_patterns("uv.lock", "Cargo.lock", "target", ".venv",
                                                   "bazel-*", "MODULE.bazel.lock"))
     os.remove(os.path.join(course, "README.md"))  # the starter's README is for the agent
+    # The template's .gitignore plus the starter's lines, as AGENTS.md describes.
     with open(os.path.join(course, ".gitignore"), "w") as f:
-        f.write(open(os.path.join(src, "gitignore.append")).read() + "\n/docs/progress.js\n")
+        f.write(open(os.path.join(ROOT, ".gitignore")).read() + "\n"
+                + open(os.path.join(src, "gitignore.append")).read())
     os.remove(os.path.join(course, "gitignore.append"))
     cpath = os.path.join(course, "curriculum.json")
     c = json.load(open(cpath))
@@ -95,7 +97,9 @@ def main():
     run("python3 tools/sync_curriculum.py")
     for cmd in fixture.get("setup", []):
         run(cmd)
-    run("git init -q && git add -A && git -c user.name=e2e -c user.email=e2e@example.com commit -qm init")
+    # Ignore the machine's global excludes, so a local run sees what CI sees.
+    run("git init -q && git config core.excludesFile /dev/null && git add -A"
+        " && git -c user.name=e2e -c user.email=e2e@example.com commit -qm init")
 
     # the fixture must cover exactly the files with TODO(you) stubs
     stub_files = sorted(os.path.relpath(os.path.join(d, f), course)

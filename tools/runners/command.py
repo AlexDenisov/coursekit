@@ -18,6 +18,7 @@ import os
 import subprocess
 import sys
 
+sys.dont_write_bytecode = True  # no __pycache__ in the learner's repo
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import junit  # noqa: E402
 

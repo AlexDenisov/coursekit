@@ -1,126 +1,133 @@
-# coursekit: a template for learning by building
+# Build your own Redis
 
-A repo template for a self-paced, hands-on course on **any topic you can
-write code for**: compilers, databases, numerical methods, networking,
-machine learning, data structures. Together with a coding agent (Claude Code,
-Codex, Cursor, ...) you turn it into a course built around *your* goals:
+Learn how Redis works by building one in C++20, one tested exercise at a time.
+You start with the bytes on the wire and finish with a single-threaded server
+that `redis-cli` and `redis-benchmark` talk to unchanged. It has strings,
+expiry, lists, hashes, sets and SCAN, and it passes a compatibility suite
+recorded from real Redis. Advanced tracks (compact encodings, eviction, RDB/AOF,
+replication, pub/sub, transactions) are planned beyond that.
 
-- **small exercises that build on each other**: each one is a README with one
-  idea, an API to implement, stubs marked `TODO(you)`, and tests that fail
-  until you're done;
-- **milestones built from your own code**: every track ends in something
-  real, assembled from the pieces you wrote;
-- **tests checked against an outside oracle**, and a **hidden reference
-  solution** (on a separate branch) that proves every exercise is passable;
-- **an interactive map** of the course: what each exercise needs, what you
-  can start now, what you've finished;
-- **a progress report** from your actual test results.
+Every expected reply in the tests was recorded from a real `redis-server`, so
+when your tests pass, your server answers the way Redis does, down to the error
+strings.
 
-The agent designs the course with you, writes the exercises, keeps the tests
-honest, and gives hints when you're stuck. You write the solutions.
+## The big picture
 
-## What's in the template
+What happens between `redis-cli SET k v` and `+OK`:
 
-| File | What it is |
+1. **Bytes arrive** on a socket, possibly in pieces: `net/sockets`, then
+   `net/nonblocking` and `net/buffers`.
+2. **The event loop** decides whose bytes to read next, one thread for all
+   clients: `net/timers`, `net/event_loop` (kqueue), `net/client`.
+3. **The parser** turns bytes into `{"SET", "k", "v"}`: `resp/parser`.
+4. **The command table** finds `set` and checks its arity: `cmd/dispatch`.
+5. **The command** changes the keyspace, a hash table that rehashes a little
+   at a time: `db/strings`, `ds/dict`, `db/keyspace`, `db/expire`, ...
+6. **The reply** is encoded as RESP and written back when the socket is
+   writable: `resp/encoder`, `net/client`.
+
+The milestones assemble these into servers: ★ `server/hello_cli` (blocking,
+one client), ★ `server/event_server` (many clients), ★ `server/mini_redis`
+(the main goal). The narrative behind all of this is in
+[docs/how_redis_works.md](docs/how_redis_works.md); read it now, and again
+halfway through.
+
+## The course
+
+- **[docs/map.html](docs/map.html)**: open it in a browser. Click an exercise
+  to see what it needs, in a workable order. Presets jump to each ★.
+- **[docs/roadmap.md](docs/roadmap.md)**: every exercise by track and level.
+- **[curriculum.json](curriculum.json)**: the source of both.
+
+Six tracks, three levels. Basic gets you talking to `redis-cli`; intermediate
+gets you a usable mini Redis; advanced is everything after.
+
+| Track | ★ Milestone |
 |---|---|
-| [AGENTS.md](AGENTS.md) | What the agent does: bootstrap interview, rules, how to add exercises. `CLAUDE.md` points to it |
-| [PLAYBOOK.md](PLAYBOOK.md) | The design: principles, repo layout, exercise anatomy, tests, the map, progress, stack recommendations |
-| [curriculum.json](curriculum.json) | The course as data: levels, tracks, exercises, dependencies. Placeholder content until you bootstrap |
-| [docs/map.html](docs/map.html) | The interactive map; open it in a browser |
-| [docs/project.md](docs/project.md) | Your course's own choices, filled in during bootstrap |
-| `tools/sync_curriculum.py` | Validates `curriculum.json`; regenerates `docs/curriculum.js`, `roadmap.md`, `dependencies.md` |
-| `tools/progress.py` | Runs your tests, prints where you are, updates the map |
-| `tools/runners/` | How tests are run: `command` (any stack), `bazel`, or your own (a small JSON protocol) |
-| `starters/cpp-bazel/` | A ready C++20 + Bazel + GoogleTest + hermetic clang setup, with a sample exercise |
-| `starters/python-uv/` | Python + uv + pytest + ruff, with the same sample exercise |
-| `starters/rust-cargo/` | Rust cargo workspace (one crate per exercise), with the same sample exercise |
-| `starters/solutions/` | The `solutions` branch skeleton: `verify.sh` and its README |
-| `tests/`, `.github/workflows/ci.yml` | End-to-end checks of every starter (with the samples' reference solutions), run in CI on Linux and macOS |
-| [LICENSE](LICENSE), [CONTRIBUTING.md](CONTRIBUTING.md) | MIT; how to improve the template itself |
+| Protocol | `server/hello_cli`: redis-cli connects; PING, ECHO, SET, GET, INCR work |
+| Event loop | `server/event_server`: `redis-benchmark -c 50` runs clean |
+| Keyspace | `server/mini_redis`: the compatibility suite passes |
+| Internals | `server/lean_redis`: within 2x of real Redis |
+| Durability | `server/durable_redis`: survives `kill -9`; real Redis loads your RDB |
+| Messaging | `server/messaging_redis`: chat, job queue, WATCH-guarded counter |
 
-Requirements: `git`, `python3` (3.9+, standard library only), a browser, and
-whatever toolchain your course uses: `bazelisk` for C++ (the compiler is
-downloaded by Bazel), `uv` for Python, `rustup` for Rust.
+**Start here:** [`resp/encoder`](resp/encoder/README.md), then
+[`resp/parser`](resp/parser/README.md), [`cmd/dispatch`](cmd/dispatch/README.md),
+[`db/strings`](db/strings/README.md).
 
-## Start your own course
-
-1. **Make a copy.** Use this repo as a template on GitHub, or:
-   ```sh
-   git clone <this repo> my-course && cd my-course
-   rm -rf .git && git init
-   ```
-2. **Open your agent in the repo** and ask it to bootstrap. For example:
-   > Read AGENTS.md and bootstrap a course. I want to learn how relational
-   > databases work by building a small one in Rust. I know SQL well, and
-   > some Rust; I have about five hours a week.
-
-   It reads [AGENTS.md](AGENTS.md) and [PLAYBOOK.md](PLAYBOOK.md), then
-   interviews you: your goal, background, language, time. Answer honestly;
-   the course is shaped around the answers.
-3. **Agree on the plan.** The agent proposes tracks (goals), milestones,
-   levels and a first slice of exercises. Push back until it's the course
-   you want.
-4. **Let it scaffold.** It fills in `docs/project.md` and `curriculum.json`,
-   sets up the toolchain (for C++, from `starters/cpp-bazel/`), writes the
-   course README and the first few exercises, and creates the hidden
-   reference solutions in a worktree next to the repo:
-   ```
-   <workspace>/
-     my-course/              main: exercises + your work
-     my-course-solutions/    solutions (spoilers), committed by the agent
-   ```
-5. **Review and commit.** The agent never commits on `main` and never
-   pushes; you review its changes and commit them yourself.
-
-## The learning loop
+## Setup (macOS)
 
 ```sh
-open docs/map.html                 # pick an exercise (or: xdg-open / start)
-$EDITOR <domain>/<exercise>/       # read README.md, fill in the TODO(you) stubs
-<test command from the README>     # until the tests pass
-python3 tools/progress.py          # where am I? (and updates the map)
-git commit -am "<exercise>: done"
+brew install bazelisk redis     # Bazel (pinned by .bazelversion) and the real Redis
+bazel test //common/...         # first run downloads a hermetic clang; then passes
+bazel run :refresh_compile_commands   # compile_commands.json for clangd (VS Code, Zed, ...)
 ```
 
-Ask the agent when you need it:
+You never need the host compiler: Bazel fetches clang 23 and uses libc++ from
+the macOS SDK (Xcode or the Command Line Tools must be installed).
 
-- "I'm stuck on `<exercise>`": you get the weakest hint that unblocks you,
-  not the solution (unless you ask for it);
-- "review my `<exercise>`": correctness, the cases the tests miss,
-  complexity;
-- "write the next exercises" / "add a track on X": the course grows ahead of
-  you;
-- "where am I?": a summary of the progress report and what to do next.
+## Workflow
 
-## Editing the course by hand
-
-Everything about the course structure is in `curriculum.json`. After editing
-it:
+Each exercise is a directory with a README (the idea and the task), a header
+(the API and its contracts), a `.cc` with stubs marked `TODO(you)`, and tests
+that fail until you're done. Write your code in the `.cc` file, on this branch,
+and commit when you like.
 
 ```sh
-python3 tools/sync_curriculum.py
+bazel test //resp/parser/...                                   # one exercise
+bazel test //resp/parser:parser_test                           # required part only
+bazel test //resp/parser:optional_test                         # optional part
+bazel test //resp/parser:parser_test --test_filter='Parser.Every*'   # some test cases
+bazel test //resp/parser:parser_test --test_output=all         # see all output
+bazel test --config=asan //resp/parser/...                     # AddressSanitizer + UBSan
+python3 tools/progress.py                                      # where am I? (updates the map)
 ```
 
-It checks ids, levels, tracks, edges, cycles and the level rule (an exercise
-depends only on exercises at its level or below), then regenerates the map
-data and the docs. How tests are run for the progress report is set in its
-`progress` block; see [PLAYBOOK.md §8](PLAYBOOK.md#8-progress-toolsprogresspy).
+A broken contract (an `RD_CHECK`) aborts the whole test binary, so one bug can
+show up as a wall of failures. Fix the first one and rerun.
 
-## Choosing a language
+**Stuck?** Ask the agent ("I'm stuck on resp/parser"). It gives the weakest
+hint that unblocks you, and shows solution code only if you ask for it
+explicitly.
 
-Anything with a test runner works; PLAYBOOK §11 lists the requirements.
-There are ready starters for Python (`uv`, `pytest`) and Rust (`cargo`). For C++ the recommended stack
-(PLAYBOOK §12, ready in `starters/cpp-bazel/`) is modern C++20, Bazel with
-bzlmod, GoogleTest, and a hermetic clang from
-[mull-project/toolchains](https://github.com/mull-project/toolchains), so the
-course builds with the same compiler everywhere.
+## How the tests know what's right
 
-## Contributing and license
+`tools/redis_reference.py` starts a throwaway `redis-server` and runs a case
+file from `tools/cases/` against it, printing every reply byte for byte:
 
-Improvements to the template (tooling, the map, starters, runners, the
-playbook) are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). The template is
-under the [MIT license](LICENSE). A course made from it keeps that `LICENSE`
-file, because MIT requires the notice to stay with the template code the course
-still contains. What you add yourself (exercises, solutions, notes) you may
-license however you like, in a separate file next to it.
-The hedron patch in `starters/cpp-bazel/third_party/` is Apache-2.0.
+```sh
+python3 tools/redis_reference.py tools/cases/strings.txt
+```
+
+That's the oracle. The tests contain its output, marked `// Redis:` or
+introduced by a comment naming the case file. Try your own commands the same
+way, or poke at a live server: `printf '*1\r\n$4\r\nPING\r\n' | nc localhost 6379`.
+
+## Reference solutions
+
+The orphan branch `redis-solutions`, checked out next to this repo as
+`../coursekit-solutions`, holds a reference solution for every exercise
+(spoilers!). Its `verify.sh` runs all the tests against them in a private copy,
+which proves every exercise is passable. You don't need it to do the course.
+
+## Glossary
+
+| Term | Meaning |
+|---|---|
+| RESP | REdis Serialization Protocol: the wire format (`+OK\r\n`, `$5\r\nhello\r\n`, ...) |
+| bulk string | a length-prefixed, binary-safe string in RESP |
+| multibulk | an array of bulk strings: how clients send requests |
+| inline command | a request typed as one plain-text line (`PING\r\n`) |
+| arity | number of arguments a command takes, counting its name; negative = "at least" |
+| pipelining | sending many requests without waiting for replies |
+| keyspace | the top-level dictionary from key to value |
+| rehashing | moving entries to a bigger (or smaller) hash table, incrementally in Redis |
+| event loop | one thread waiting on many sockets (kqueue on macOS, epoll on Linux) |
+| RDB / AOF | snapshot file / append-only command log: Redis's two persistence formats |
+
+## License and origin
+
+MIT ([LICENSE](LICENSE)), both for the template code and for the course. This
+course was made from [coursekit](https://github.com/AlexDenisov/coursekit), a
+template for learning by building; [PLAYBOOK.md](PLAYBOOK.md) and
+[AGENTS.md](AGENTS.md) describe how it works.

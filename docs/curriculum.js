@@ -552,6 +552,12 @@ window.CURRICULUM = {
   ],
   [
    "resp/parser",
+   "db/strings",
+   "part",
+   "only parse_int64, for INCR"
+  ],
+  [
+   "resp/parser",
    "server/hello_cli",
    "req"
   ],
@@ -1063,5 +1069,5 @@ window.CURRICULUM = {
    "level": "intermediate"
   }
  ],
- "_hash": "7aebffa37018"
+ "_hash": "3ba48780c294"
 };

@@ -1,0 +1,148 @@
+# db/strings
+## set and get
+SET k v
+GET k
+SET k w
+GET k
+GET missing
+SET
+SET k
+GET a b
+## set options
+SET k v NX
+SET n v NX
+SET k v2 XX
+GET k
+SET x v XX
+GET x
+SET k v NX XX
+SET k v nx
+SET k v FOO
+SET k v GET
+SET new v GET
+SET k v3 xx get
+SET k v4 NX GET
+SET k v4 GET GET
+## del and exists
+SET a 1
+SET b 2
+DEL a b c
+DEL b
+EXISTS a
+SET a 1
+EXISTS a a missing
+DEL a a
+DEL
+EXISTS
+## incr family
+INCR n
+INCR n
+INCRBY n 10
+DECR n
+DECRBY n 5
+INCRBY n -20
+SET s abc
+INCR s
+SET s " 1"
+INCR s
+SET s 01
+INCR s
+SET s +1
+INCR s
+SET s -0
+INCR s
+SET s ""
+INCR s
+SET s 1.5
+INCR s
+INCRBY n abc
+INCRBY n 1.0
+INCRBY n 9223372036854775808
+## incr overflow
+SET big 9223372036854775807
+INCR big
+GET big
+SET big 9223372036854775806
+INCR big
+SET small -9223372036854775807
+DECR small
+DECR small
+SET z 0
+DECRBY z -9223372036854775808
+DECRBY z 9223372036854775807
+INCRBY z -9223372036854775808
+SET z 1
+INCRBY z -9223372036854775808
+SET y 9223372036854775807
+GET y
+SET y 9223372036854775808
+INCR y
+SET y -9223372036854775808
+INCR y
+SET y -9223372036854775809
+INCR y
+## append and strlen
+APPEND a hello
+APPEND a " world"
+GET a
+STRLEN a
+STRLEN missing
+SET num 10
+APPEND num 5
+INCR num
+## mget and mset
+MSET a 1 b 2
+MGET a b c
+MSET a
+MSET a 1 b
+MSET a 3 a 4
+GET a
+MGET
+## binary
+SET bin "\x00\x01\r\n"
+GET bin
+STRLEN bin
+## getrange and setrange (optional)
+SET g "Hello World"
+GETRANGE g 0 4
+GETRANGE g -5 -1
+GETRANGE g -100 2
+GETRANGE g 5 1
+GETRANGE g 0 100
+GETRANGE g 100 200
+GETRANGE g -1 -5
+GETRANGE missing 0 -1
+GETRANGE g a 1
+SETRANGE g 6 Redis
+GET g
+SETRANGE pad 5 x
+GET pad
+SETRANGE g -1 x
+SETRANGE g 0 ""
+SETRANGE nokey 3 ""
+EXISTS nokey
+SETRANGE g 536870912 x
+SETRANGE g 536870911 x
+## range edge cases (optional)
+SET g "Hello World"
+GETRANGE g 0 -100
+GETRANGE g -5 -100
+GETRANGE g -100 -5
+GETRANGE g 0 0
+GETRANGE g 3 3
+SET e ""
+GETRANGE e 0 0
+GETRANGE e 0 -1
+SETRANGE g 536870912 ""
+SETRANGE g -1 ""
+SETRANGE g abc x
+SETRANGE g 0 Jello
+GET g
+SETRANGE g 11 !
+GET g
+## set replaces and counts
+SET k v
+SET k "" 
+GET k
+EXISTS k
+STRLEN k

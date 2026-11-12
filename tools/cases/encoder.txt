@@ -1,0 +1,31 @@
+# resp/encoder: one reply of each RESP2 type, as real Redis sends it.
+## simple string
+PING
+SET k v
+## error
+GET
+## integers
+INCR n
+SET m -9223372036854775807
+DECR m
+SET p 9223372036854775806
+INCR p
+## bulk strings
+SET s hello
+GET s
+SET e ""
+GET e
+SET crlf "a\r\nb"
+GET crlf
+## null bulk
+GET missing
+## arrays
+RPUSH l a bb
+LRANGE l 0 -1
+LRANGE nolist 0 -1
+SET s hello
+MGET s missing
+## null array
+BLPOP nolist 0.01
+## error with newline
+raw: *1\r\n$9\r\nfoo\r\nbar1\r\n

@@ -1,0 +1,21 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "dispatch",
+    srcs = ["dispatch.cc"],
+    hdrs = ["dispatch.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:check",
+        "//resp/encoder",
+    ],
+)
+
+cc_test(
+    name = "dispatch_test",
+    srcs = ["dispatch_test.cc"],
+    deps = [
+        ":dispatch",
+        "@googletest//:gtest_main",
+    ],
+)

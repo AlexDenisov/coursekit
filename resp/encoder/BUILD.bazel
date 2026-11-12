@@ -1,0 +1,28 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "encoder",
+    srcs = ["encoder.cc"],
+    hdrs = ["encoder.h"],
+    visibility = ["//visibility:public"],
+    deps = ["//common:check"],
+)
+
+cc_test(
+    name = "encoder_test",
+    srcs = ["encoder_test.cc"],
+    deps = [
+        ":encoder",
+        "//common:rng",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "optional_test",
+    srcs = ["optional_test.cc"],
+    deps = [
+        ":encoder",
+        "@googletest//:gtest_main",
+    ],
+)

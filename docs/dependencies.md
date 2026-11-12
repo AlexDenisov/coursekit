@@ -65,6 +65,7 @@ flowchart LR
   n0 ==>|see the format from the writing side first| n1
   n0 -->|replies are encoded to compare bytes| n2
   n2 -->|commands register in the table| n3
+  n1 -.->|only parse_int64, for INCR| n3
   n1 --> n7
   n0 --> n7
   n2 --> n7

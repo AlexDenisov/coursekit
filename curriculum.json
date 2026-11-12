@@ -88,6 +88,7 @@
     ["resp/encoder", "resp/parser", "learn", "see the format from the writing side first"],
     ["resp/encoder", "cmd/dispatch", "req", "replies are encoded to compare bytes"],
     ["cmd/dispatch", "db/strings", "req", "commands register in the table"],
+    ["resp/parser", "db/strings", "part", "only parse_int64, for INCR"],
     ["resp/parser", "server/hello_cli", "req"],
     ["resp/encoder", "server/hello_cli", "req"],
     ["cmd/dispatch", "server/hello_cli", "req"],

@@ -1,0 +1,44 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "strings",
+    srcs = ["strings.cc"],
+    hdrs = ["strings.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//common:check",
+        "//resp/encoder",
+        "//resp/parser",
+    ],
+)
+
+cc_library(
+    name = "transcript",
+    testonly = True,
+    hdrs = ["transcript.h"],
+    deps = [
+        ":strings",
+        "@googletest//:gtest",
+    ],
+)
+
+cc_test(
+    name = "strings_test",
+    srcs = ["strings_test.cc"],
+    deps = [
+        ":strings",
+        ":transcript",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "optional_test",
+    srcs = ["optional_test.cc"],
+    deps = [
+        ":strings",
+        ":transcript",
+        "@googletest//:gtest_main",
+    ],
+)

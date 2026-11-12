@@ -1,8 +1,10 @@
 name: CI
 
+# The course's own checks. Tests aren't run here: on this branch they fail until you
+# solve each exercise. Run `python3 tools/progress.py` locally to see where you are.
+
 on:
   push:
-    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -15,68 +17,28 @@ concurrency:
 
 jobs:
   checks:
-    name: Template checks
+    name: Curriculum and tools
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: curriculum.json is valid and generated docs are up to date
         run: python3 tools/sync_curriculum.py --check
       - name: Python tools compile
-        run: python3 -m py_compile tools/*.py tools/runners/*.py tests/*.py
-      - name: Shell scripts parse
-        run: bash -n starters/solutions/verify.sh
-      - name: progress.py runs on the bare template
-        run: python3 tools/progress.py
+        run: python3 -m py_compile tools/*.py tools/runners/*.py
 
-  starter:
-    name: ${{ matrix.starter }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { starter: cpp-bazel, os: ubuntu-24.04 }
-          - { starter: cpp-bazel, os: ubuntu-24.04-arm }
-          - { starter: cpp-bazel, os: macos-15 }
-          - { starter: python-uv, os: ubuntu-24.04 }
-          - { starter: python-uv, os: macos-15 }
-          - { starter: rust-cargo, os: ubuntu-24.04 }
-          - { starter: rust-cargo, os: macos-15 }
+  build:
+    name: Everything compiles (macOS)
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-
       - name: Bazel repository cache
-        if: matrix.starter == 'cpp-bazel'
         uses: actions/cache@v4
         with:
           path: ~/.cache/bazel-repo
-          key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('starters/cpp-bazel/MODULE.bazel', 'starters/cpp-bazel/.bazelversion') }}
+          key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel', '.bazelversion') }}
       - name: Point Bazel at the cache
-        if: matrix.starter == 'cpp-bazel'
         run: echo "common --repository_cache=$HOME/.cache/bazel-repo" >> ~/.bazelrc
-
-      - name: Install uv
-        if: matrix.starter == 'python-uv'
-        uses: astral-sh/setup-uv@v6
-
-      - name: End to end
-        run: python3 tests/e2e.py ${{ matrix.starter }}
-
-  lint:
-    name: Starter lint
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-      - name: ruff (python-uv)
-        working-directory: starters/python-uv
-        run: |
-          uv run ruff check .
-          uv run ruff format --check .
-          uv run ruff check ../../tests/starters/python-uv
-      - name: clippy + rustfmt (rust-cargo)
-        working-directory: starters/rust-cargo
-        run: |
-          cargo fmt --check
-          cargo clippy --workspace --all-targets -- -D warnings
-          rustfmt --check --edition 2021 --config max_width=100 ../../tests/starters/rust-cargo/solutions/example/prefix_sums/src/lib.rs
+      - name: Build
+        run: bazel build //...
+      - name: Shared helpers pass
+        run: bazel test //common/...

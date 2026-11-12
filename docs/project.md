@@ -28,8 +28,7 @@ bootstrap (see [AGENTS.md](../AGENTS.md)) and kept up to date.
   + hermetic clang, GoogleTest (the `starters/cpp-bazel` stack). Event loop
   uses kqueue only (macOS); an epoll backend is a possible side track. RESP2
   only (RESP3 is a future topic).
-- **Namespace / check macro prefix:** `myredis` / `MYREDIS_` (Bazel module
-  `myredis`).
+- **Namespace / check macro prefix:** `rd` / `RD_` (Bazel module `rd`).
 - **Oracle(s):**
   - Real `redis-server` (`brew install redis`):
     `tools/redis_reference.py` sends each test's command sequence to a

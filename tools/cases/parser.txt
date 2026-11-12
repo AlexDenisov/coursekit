@@ -1,0 +1,53 @@
+# resp/parser: how Redis reacts to malformed requests (raw bytes, fresh connection each).
+## multibulk length
+raw: *abc\r\n
+raw: *01\r\n
+raw: *+1\r\n
+raw: * 1\r\n
+raw: *2147483648\r\n
+raw: *2147483647\r\n$4\r\nPING\r\n
+raw: *0\r\n*1\r\n$4\r\nPING\r\n
+raw: *-1\r\n*1\r\n$4\r\nPING\r\n
+raw: *-5\r\n*1\r\n$4\r\nPING\r\n
+## bulk header
+raw: *1\r\n:5\r\n
+raw: *1\r\n+PING\r\n
+raw: *1\r\n$-1\r\n
+raw: *1\r\n$abc\r\n
+raw: *1\r\n$04\r\nPING\r\n
+raw: *1\r\n$536870912\r\n
+raw: *1\r\n$536870913\r\n
+raw: *1\r\n$99999999999999999999\r\n
+## trailing bytes after a bulk payload are not checked
+raw: *1\r\n$4\r\nPINGxy*1\r\n$4\r\nPING\r\n
+## long lines without a newline (the bulk length line has no limit)
+raw-expr: b"*" + b"1" * 65535
+raw-expr: b"*" + b"1" * 65536
+raw-expr: b"*1\r\n$" + b"1" * 65535
+raw-expr: b"*1\r\n$" + b"1" * 65536
+raw-expr: b"*1\r\n$" + b"1" * 300000
+## pipelined and binary
+raw: *1\r\n$4\r\nPING\r\n*2\r\n$4\r\nECHO\r\n$4\r\na\r\nb\r\n
+raw: *2\r\n$4\r\nECHO\r\n$0\r\n\r\n
+raw: *2\r\n$4\r\nECHO\r\n$3\r\na\x00b\r\n
+## inline (optional part)
+raw: PING\r\n
+raw: PING\n
+raw: ECHO hello\r\n
+raw: ECHO   hello\r\n
+raw: ECHO "hello world"\r\n
+raw: ECHO 'it''s'\r\n
+raw: ECHO "a\\x41\\n"\r\n
+raw: ECHO 'a\\'b'\r\n
+raw: ECHO "abc\r\n
+raw: ECHO "abc"def\r\n
+raw: ECHO\thello \r\n
+raw: ECHO hello\r\nPING\r\n
+raw: ECHO "tab\\there \\"q\\" \\\\"\r\n
+raw: ECHO 'a\\nb'\r\n
+raw: ECHO ""\r\n
+raw: ECHO 'abc\r\n
+raw: \r\nPING\r\n
+raw: \x20\x20\r\nPING\r\n
+raw-expr: b"PING" + b" " * 65532
+raw-expr: b"PING" + b" " * 65533

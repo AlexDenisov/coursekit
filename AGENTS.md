@@ -54,8 +54,12 @@ three:
    adjacent fields)? What do they want to skip?
 3. **Language and stack.** Default: what they're fluent in, unless learning
    the language is part of the goal. For C++, propose PLAYBOOK §12.
-4. Time per week; machine/OS (affects toolchains); interest in real data,
-   benchmarks, side tracks.
+4. Machine/OS (affects toolchains); interest in real data, benchmarks,
+   side tracks.
+5. Optional: how long is a typical sitting? It only sets exercise size (one
+   exercise should fit in one sitting, so they stop at green tests, not
+   mid-thought). If they don't care, size exercises for 1–2 hours. Don't
+   ask about time per week: it changes the pace, not the course.
 
 Then propose, in a short message: 2–5 **tracks** (goals) each ending in a ★
 milestone, the **levels**, the **domains** (directories), the oracle(s), and

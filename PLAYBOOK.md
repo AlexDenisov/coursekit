@@ -477,7 +477,7 @@ Don't fill these in here: this file stays generic. Answer them in
 `docs/project.md`.
 
 - **Topic / end goal:**
-- **Learner:** background, what they already know, time per week
+- **Learner:** background, what they already know, typical session length (optional)
 - **Tracks (goals) and milestones (★):**
 - **Levels** (if not basic / intermediate / advanced):
 - **Language, toolchain, and deviations from §11–12:**

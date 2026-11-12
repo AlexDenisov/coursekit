@@ -32,6 +32,9 @@ recorded from real Redis.
   click an exercise to see what it needs.
 - **[Browse the course](https://github.com/AlexDenisov/coursekit/tree/redis)**
   on the `redis` branch: its README, `curriculum.json`, and the exercises.
+- **[Reference solutions](https://github.com/AlexDenisov/coursekit/tree/redis-solutions)**
+  on the `redis-solutions` branch (spoilers): what `verify.sh` checks every
+  exercise against.
 
 [![The map of a course on building Redis: exercises in lanes by track, from protocol and event loop to keyspace, internals, durability and messaging, with milestones marked ★](redis-roadmap.png)](https://alexdenisov.github.io/coursekit/redis/)
 
@@ -68,10 +71,10 @@ downloaded by Bazel), `uv` for Python, `rustup` for Rust.
 2. **Open your agent in the repo** and ask it to bootstrap. For example:
    > Read AGENTS.md and bootstrap a course. I want to learn how relational
    > databases work by building a small one in Rust. I know SQL well, and
-   > some Rust; I have about five hours a week.
+   > some Rust.
 
    It reads [AGENTS.md](AGENTS.md) and [PLAYBOOK.md](PLAYBOOK.md), then
-   interviews you: your goal, background, language, time. Answer honestly;
+   interviews you: your goal, background, language, setup. Answer honestly;
    the course is shaped around the answers.
 3. **Agree on the plan.** The agent proposes tracks (goals), milestones,
    levels and a first slice of exercises. Push back until it's the course

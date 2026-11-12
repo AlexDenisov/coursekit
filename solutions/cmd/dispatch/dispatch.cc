@@ -27,20 +27,25 @@ const CommandSpec* CommandTable::find(std::string_view name) const {
   return it == commands_.end() ? nullptr : &it->second;
 }
 
-void CommandTable::dispatch(std::span<const std::string> args, std::string& reply) const {
+std::string CommandTable::check(std::span<const std::string> args) const {
   RD_CHECK(!args.empty());
   const CommandSpec* spec = find(args[0]);
-  if (spec == nullptr) {
-    resp::append_error(reply, unknown_command_error(args));
-    return;
-  }
+  if (spec == nullptr) return unknown_command_error(args);
   auto argc = static_cast<int64_t>(args.size());
   if ((spec->arity > 0 && argc != spec->arity) || (spec->arity < 0 && argc < -spec->arity)) {
-    resp::append_error(reply, arity_error(spec->name));
+    return arity_error(spec->name);
+  }
+  return "";
+}
+
+void CommandTable::dispatch(std::span<const std::string> args, std::string& reply,
+                            Session* session) const {
+  if (std::string err = check(args); !err.empty()) {
+    resp::append_error(reply, err);
     return;
   }
-  CommandContext ctx{args, reply};
-  spec->fn(ctx);
+  CommandContext ctx{args, reply, session};
+  find(args[0])->fn(ctx);
 }
 
 std::string unknown_command_error(std::span<const std::string> args) {

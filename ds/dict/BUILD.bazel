@@ -1,0 +1,22 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "dict",
+    hdrs = [
+        "dict.h",
+        "dict_impl.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = ["//common:rng"],
+)
+
+cc_test(
+    name = "dict_test",
+    size = "small",
+    srcs = ["dict_test.cc"],
+    deps = [
+        ":dict",
+        "//common:rng",
+        "@googletest//:gtest_main",
+    ],
+)

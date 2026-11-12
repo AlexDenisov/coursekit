@@ -1,0 +1,28 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "client",
+    srcs = ["client.cc"],
+    hdrs = ["client.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//net/buffers",
+        "//net/nonblocking",
+        "//net/sockets",
+        "//resp/encoder",
+        "//resp/parser",
+    ],
+)
+
+cc_test(
+    name = "client_test",
+    size = "small",
+    srcs = ["client_test.cc"],
+    deps = [
+        ":client",
+        "//common:test_client",
+        "//db/strings",
+        "@googletest//:gtest_main",
+    ],
+)

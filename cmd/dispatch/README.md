@@ -30,6 +30,10 @@
 Exactly one reply per request. That's the rule that lets a client pipeline 100
 requests and match up 100 replies in order.
 
+`CommandContext` also carries a `Session*` for the calling client: `nullptr`
+until the Messaging track, where pub/sub and BLPOP need to send a client
+something outside the request/reply flow.
+
 Commands are `std::function`s, so a command can capture what it works on.
 `db/strings` will register lambdas that capture its database:
 `table.add({"get", 2, [&db](CommandContext& c) { ... }})`.
@@ -69,7 +73,8 @@ message are already handled by `append_error`
 |---|---|
 | `CommandTable::add(spec)` | given; checks lowercase, unique, non-zero arity |
 | `CommandTable::find(name)` | case-insensitive exact match, or `nullptr` |
-| `CommandTable::dispatch(args, reply)` | lookup, arity, call; exactly one reply appended |
+| `CommandTable::check(args)` | the error `dispatch` would reply (unknown / arity), or `""`; runs nothing |
+| `CommandTable::dispatch(args, reply, session)` | `check`, then call; exactly one reply appended |
 | `unknown_command_error(args)` | the message above, without the leading `-` |
 | `arity_error(name)` | `ERR wrong number of arguments for '<name>' command` |
 | `register_connection_commands(table)` | `PING [message]`, `ECHO message` |

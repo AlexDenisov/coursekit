@@ -1,0 +1,26 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "hashes",
+    srcs = ["hashes.cc"],
+    hdrs = ["hashes.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//db/keyspace",
+        "//ds/dict",
+        "//resp/encoder",
+        "//resp/parser",
+    ],
+)
+
+cc_test(
+    name = "hashes_test",
+    size = "small",
+    srcs = ["hashes_test.cc"],
+    deps = [
+        ":hashes",
+        "//common:transcript",
+        "@googletest//:gtest_main",
+    ],
+)

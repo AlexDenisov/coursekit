@@ -13,22 +13,12 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "transcript",
-    testonly = True,
-    hdrs = ["transcript.h"],
-    deps = [
-        ":strings",
-        "@googletest//:gtest",
-    ],
-)
-
 cc_test(
     name = "strings_test",
     srcs = ["strings_test.cc"],
     deps = [
         ":strings",
-        ":transcript",
+        "//common:transcript",
         "@googletest//:gtest_main",
     ],
 )
@@ -38,7 +28,7 @@ cc_test(
     srcs = ["optional_test.cc"],
     deps = [
         ":strings",
-        ":transcript",
+        "//common:transcript",
         "@googletest//:gtest_main",
     ],
 )

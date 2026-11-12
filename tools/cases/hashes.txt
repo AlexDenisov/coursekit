@@ -1,0 +1,53 @@
+# db/hashes
+## set and get
+HSET h f1 v1
+HSET h f2 v2 f3 v3
+HSET h f1 new
+HGET h f1
+HGET h nope
+HGET missing f
+HLEN h
+HLEN missing
+HEXISTS h f2
+HEXISTS h nope
+HSTRLEN h f1
+HSTRLEN h nope
+HMGET h f1 nope f2
+HMGET missing a b
+HSET h f
+HSET h a b c
+HSET
+## getall keys vals
+HSET h a 1 b 2 c 3
+HGETALL h
+HKEYS h
+HVALS h
+HGETALL missing
+HKEYS missing
+## del
+HSET h a 1 b 2
+HDEL h a nope
+HDEL h a
+HLEN h
+HDEL h b
+EXISTS h
+HDEL missing a
+## setnx and incrby
+HSETNX h f v
+HSETNX h f w
+HGET h f
+HINCRBY h n 5
+HINCRBY h n -2
+HINCRBY h f 1
+HINCRBY h n abc
+HSET h big 9223372036854775807
+HINCRBY h big 1
+HGET h n
+## wrongtype
+SET s v
+HSET s f v
+HGET s f
+HGETALL s
+HSET h f v
+GET h
+TYPE h

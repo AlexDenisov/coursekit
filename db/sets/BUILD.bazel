@@ -1,0 +1,38 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "sets",
+    srcs = ["sets.cc"],
+    hdrs = ["sets.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//common:rng",
+        "//db/keyspace",
+        "//ds/dict",
+        "//resp/encoder",
+        "//resp/parser",
+    ],
+)
+
+cc_test(
+    name = "sets_test",
+    size = "small",
+    srcs = ["sets_test.cc"],
+    deps = [
+        ":sets",
+        "//common:transcript",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "optional_test",
+    size = "small",
+    srcs = ["optional_test.cc"],
+    deps = [
+        ":sets",
+        "//common:transcript",
+        "@googletest//:gtest_main",
+    ],
+)

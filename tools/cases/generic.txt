@@ -1,0 +1,56 @@
+# db/generic
+## keys
+MSET user:1 a user:2 b user:10 c other d
+KEYS user:?
+KEYS user:*
+KEYS *
+KEYS nomatch*
+DBSIZE
+## keys skips expired (and empty key matches star)
+SET "" empty
+KEYS *
+## rename
+SET a 1
+RENAME a b
+GET a
+GET b
+RENAME missing x
+RENAME b b
+GET b
+SET c 3
+RENAME b c
+GET c
+RENAMENX c d
+RENAMENX c d
+SET e 5
+RENAMENX d e
+RENAMENX missing x
+## rename keeps ttl and type
+RPUSH l x y
+EXPIRE l 100
+RENAME l m
+TYPE m
+TTL m
+LRANGE m 0 -1
+## flush and dbsize
+MSET a 1 b 2 c 3
+DBSIZE
+FLUSHDB
+DBSIZE
+MSET a 1
+FLUSHALL
+DBSIZE
+FLUSHDB ASYNC
+FLUSHDB FOO
+## randomkey
+RANDOMKEY
+SET only 1
+RANDOMKEY
+## scan errors
+SCAN abc
+SCAN 0 COUNT 0
+SCAN 0 COUNT abc
+SCAN 0 FOO
+SCAN 0 MATCH
+SCAN 0 TYPE nosuchtype
+SCAN

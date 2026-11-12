@@ -1,0 +1,55 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
+cc_library(
+    name = "mini_redis_lib",
+    srcs = ["mini_redis.cc"],
+    hdrs = ["mini_redis.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//common:clock",
+        "//common:rng",
+        "//db/expire",
+        "//db/generic",
+        "//db/hashes",
+        "//db/keyspace",
+        "//db/lists",
+        "//db/sets",
+        "//net/client",
+        "//server/event_server",
+    ],
+)
+
+cc_binary(
+    name = "mini_redis",
+    srcs = ["main.cc"],
+    deps = [":mini_redis_lib"],
+)
+
+cc_test(
+    name = "mini_redis_test",
+    size = "small",
+    srcs = [
+        "compat_cases.inc",
+        "mini_redis_test.cc",
+    ],
+    deps = [
+        ":mini_redis_lib",
+        "//common:test_client",
+        "//common:transcript",
+        "@googletest//:gtest_main",
+    ],
+)
+
+# The real redis-cli and redis-benchmark against your server. Skips if not installed.
+#   bazel test -c opt //server/mini_redis:real_clients_test --test_output=all
+cc_test(
+    name = "real_clients_test",
+    size = "medium",
+    srcs = ["real_clients_test.cc"],
+    tags = ["manual"],
+    deps = [
+        ":mini_redis_lib",
+        "@googletest//:gtest_main",
+    ],
+)

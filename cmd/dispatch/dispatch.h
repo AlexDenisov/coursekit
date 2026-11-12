@@ -11,6 +11,17 @@
 
 namespace rd {
 
+// A connected client, as far as commands need to know. Servers with pub/sub, blocking
+// commands and transactions (the Messaging track) give each connection one; elsewhere
+// CommandContext::session is nullptr.
+class Session {
+ public:
+  virtual ~Session() = default;
+  // Sends bytes to this client outside the request/reply flow: a pub/sub message, the
+  // reply to a BLPOP that another client's LPUSH served.
+  virtual void push(std::string_view bytes) = 0;
+};
+
 // What a command implementation sees.
 struct CommandContext {
   // args[0] is the command name exactly as the client sent it ("get", "GET", "GeT").
@@ -18,6 +29,8 @@ struct CommandContext {
   // The client's reply buffer. A command appends exactly one reply (which may be an
   // array of many) with the resp/encoder functions, and never clears it.
   std::string& reply;
+  // The calling client, or nullptr (see Session).
+  Session* session = nullptr;
 };
 
 using CommandFn = std::function<void(CommandContext&)>;
@@ -42,12 +55,17 @@ class CommandTable {
 
   size_t size() const { return commands_.size(); }
 
-  // Runs one request and appends exactly one reply to `reply`:
-  //   - unknown name: the error from unknown_command_error(args);
-  //   - wrong number of arguments for the arity: arity_error(spec.name);
-  //   - otherwise the command's fn.
+  // The error dispatch would reply without running anything: unknown_command_error(args)
+  // for an unknown name, arity_error(spec.name) for the wrong number of arguments; ""
+  // if the command would run. msg/transactions uses it to reject commands at MULTI time.
+  // Precondition (checked): args is non-empty.
+  std::string check(std::span<const std::string> args) const;
+
+  // Runs one request and appends exactly one reply to `reply`: the error from check(),
+  // or else whatever the command's fn appends. `session` is passed on to the command.
   // Precondition (checked): args is non-empty. O(|args[0]|) + the command's own cost.
-  void dispatch(std::span<const std::string> args, std::string& reply) const;
+  void dispatch(std::span<const std::string> args, std::string& reply,
+                Session* session = nullptr) const;
 
  private:
   std::unordered_map<std::string, CommandSpec> commands_;  // key: the lowercase name

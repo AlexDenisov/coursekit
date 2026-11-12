@@ -51,3 +51,5 @@ raw: \r\nPING\r\n
 raw: \x20\x20\r\nPING\r\n
 raw-expr: b"PING" + b" " * 65532
 raw-expr: b"PING" + b" " * 65533
+## an error after valid requests: their replies come first, then the error, then close
+raw: *1\r\n$4\r\nPING\r\n*2\r\n$4\r\nECHO\r\n$2\r\nhi\r\n*1\r\n:5\r\n*1\r\n$4\r\nPING\r\n

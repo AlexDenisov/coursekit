@@ -1,0 +1,26 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "expire",
+    srcs = ["expire.cc"],
+    hdrs = ["expire.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//common:rng",
+        "//db/keyspace",
+        "//resp/encoder",
+        "//resp/parser",
+    ],
+)
+
+cc_test(
+    name = "expire_test",
+    size = "small",
+    srcs = ["expire_test.cc"],
+    deps = [
+        ":expire",
+        "//common:transcript",
+        "@googletest//:gtest_main",
+    ],
+)

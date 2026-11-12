@@ -1,0 +1,73 @@
+# db/sets
+## add and members
+SADD s a b c
+SADD s a d
+SCARD s
+SCARD missing
+SISMEMBER s a
+SISMEMBER s z
+SISMEMBER missing a
+SMISMEMBER s a z b
+SMEMBERS s
+SMEMBERS missing
+SADD s
+## remove
+SADD s a b c
+SREM s a z
+SREM s b c
+EXISTS s
+SREM missing a
+## algebra
+SADD a 1 2 3 4
+SADD b 3 4 5
+SADD c 4 5 6
+SINTER a b
+SINTER a b c
+SINTER a missing
+SUNION a b
+SUNION a missing
+SDIFF a b
+SDIFF a b c
+SDIFF missing a
+SINTERSTORE dst a b
+SMEMBERS dst
+SUNIONSTORE dst a c
+SCARD dst
+SDIFFSTORE dst a b c
+SMEMBERS dst
+SINTERSTORE dst a missing
+EXISTS dst
+## smove
+SADD src a b
+SADD dst c
+SMOVE src dst a
+SMOVE src dst z
+SMEMBERS src
+SMEMBERS dst
+SMOVE src dst b
+EXISTS src
+SMOVE missing dst a
+## wrongtype
+SET str v
+SADD str a
+SINTER str
+SADD s a
+SINTER s str
+SUNION s str
+SDIFF str s
+SINTERSTORE dst s str
+## random (optional): only the deterministic parts
+SPOP missing
+SPOP missing 2
+SRANDMEMBER missing
+SRANDMEMBER missing 3
+SRANDMEMBER missing -3
+SADD s a
+SPOP s -1
+SRANDMEMBER s abc
+SPOP s 0
+SRANDMEMBER s 0
+SRANDMEMBER s 5
+SRANDMEMBER s -3
+SPOP s 5
+EXISTS s

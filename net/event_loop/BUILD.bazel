@@ -1,0 +1,25 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "event_loop",
+    srcs = ["event_loop.cc"],
+    hdrs = ["event_loop.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:check",
+        "//common:clock",
+        "//net/nonblocking",
+        "//net/sockets",
+        "//net/timers",
+    ],
+)
+
+cc_test(
+    name = "event_loop_test",
+    size = "small",
+    srcs = ["event_loop_test.cc"],
+    deps = [
+        ":event_loop",
+        "@googletest//:gtest_main",
+    ],
+)

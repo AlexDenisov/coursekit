@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "db/strings/transcript.h"
+#include "common/transcript.h"
 
 // Every transcript below was recorded from Redis 8.10 by
 // `python3 tools/redis_reference.py tools/cases/strings.txt`; each test starts from an

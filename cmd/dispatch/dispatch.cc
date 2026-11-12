@@ -22,9 +22,16 @@ const CommandSpec* CommandTable::find(std::string_view name) const {
   return nullptr;
 }
 
-void CommandTable::dispatch(std::span<const std::string> args, std::string& reply) const {
+std::string CommandTable::check(std::span<const std::string> args) const {
   RD_CHECK(!args.empty());
-  // TODO(you): find, check the arity (both signs), then call fn with a CommandContext.
+  // TODO(you): find, then the arity rule for both signs.
+  return "";
+}
+
+void CommandTable::dispatch(std::span<const std::string> args, std::string& reply,
+                            Session* session) const {
+  RD_CHECK(!args.empty());
+  // TODO(you): check(); on error append it, else call fn with a CommandContext.
 }
 
 std::string unknown_command_error(std::span<const std::string> args) {

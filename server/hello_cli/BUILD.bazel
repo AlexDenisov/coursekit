@@ -1,0 +1,49 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
+cc_library(
+    name = "server",
+    srcs = ["server.cc"],
+    hdrs = ["server.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//net/sockets",
+        "//resp/encoder",
+        "//resp/parser",
+    ],
+)
+
+cc_binary(
+    name = "hello_cli",
+    srcs = ["main.cc"],
+    deps = [
+        ":server",
+        "//db/strings",
+    ],
+)
+
+cc_test(
+    name = "server_test",
+    size = "small",
+    srcs = ["server_test.cc"],
+    deps = [
+        ":server",
+        "//db/strings",
+        "//common:test_client",
+        "@googletest//:gtest_main",
+    ],
+)
+
+# Talks to your server with the real redis-cli. Skips if redis-cli isn't installed.
+#   bazel test //server/hello_cli:redis_cli_test
+cc_test(
+    name = "redis_cli_test",
+    size = "small",
+    srcs = ["redis_cli_test.cc"],
+    tags = ["manual"],
+    deps = [
+        ":server",
+        "//db/strings",
+        "@googletest//:gtest_main",
+    ],
+)

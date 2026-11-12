@@ -1,0 +1,23 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "dict_scan",
+    srcs = ["dict_scan.cc"],
+    hdrs = [
+        "dict_scan.h",
+        "dict_scan_impl.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = ["//ds/dict"],
+)
+
+cc_test(
+    name = "dict_scan_test",
+    size = "small",
+    srcs = ["dict_scan_test.cc"],
+    deps = [
+        ":dict_scan",
+        "//common:rng",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -1,0 +1,29 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "generic",
+    srcs = ["generic.cc"],
+    hdrs = ["generic.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//common:rng",
+        "//db/glob",
+        "//db/keyspace",
+        "//ds/dict_scan",
+        "//resp/encoder",
+        "//resp/parser",
+    ],
+)
+
+cc_test(
+    name = "generic_test",
+    size = "small",
+    srcs = ["generic_test.cc"],
+    deps = [
+        ":generic",
+        "//common:transcript",
+        "//db/keyspace:fake_list",
+        "@googletest//:gtest_main",
+    ],
+)

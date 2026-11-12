@@ -94,6 +94,32 @@ TEST(CommandTable, ArityErrorUsesTheLowercaseName) {
   EXPECT_EQ(run(t, {"GeT"}), "-ERR wrong number of arguments for 'get' command\r\n");
 }
 
+TEST(CommandTable, CheckReportsWithoutRunning) {
+  CommandTable t;
+  int calls = 0;
+  t.add({"get", 2, [&](CommandContext&) { ++calls; }});
+  EXPECT_EQ(t.check(Args{"GET", "k"}), "");
+  EXPECT_EQ(t.check(Args{"GET"}), "ERR wrong number of arguments for 'get' command");
+  EXPECT_EQ(t.check(Args{"NOPE", "x"}), "ERR unknown command 'NOPE', with args beginning with: 'x' ");
+  EXPECT_EQ(calls, 0);
+}
+
+struct RecordingSession : Session {
+  void push(std::string_view) override {}
+};
+
+TEST(CommandTable, PassesTheSession) {
+  CommandTable t;
+  Session* seen = nullptr;
+  t.add({"who", 1, [&](CommandContext& c) { seen = c.session; c.reply += "+OK\r\n"; }});
+  RecordingSession s;
+  std::string reply;
+  t.dispatch(Args{"WHO"}, reply, &s);
+  EXPECT_EQ(seen, &s);
+  t.dispatch(Args{"WHO"}, reply);
+  EXPECT_EQ(seen, nullptr);
+}
+
 TEST(ArityError, Format) {
   EXPECT_EQ(arity_error("mset"), "ERR wrong number of arguments for 'mset' command");
 }

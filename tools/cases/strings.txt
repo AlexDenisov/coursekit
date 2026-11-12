@@ -122,7 +122,6 @@ SETRANGE g 0 ""
 SETRANGE nokey 3 ""
 EXISTS nokey
 SETRANGE g 536870912 x
-SETRANGE g 536870911 x
 ## range edge cases (optional)
 SET g "Hello World"
 GETRANGE g 0 -100

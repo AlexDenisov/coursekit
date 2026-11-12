@@ -1,0 +1,19 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "timers",
+    srcs = ["timers.cc"],
+    hdrs = ["timers.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "timers_test",
+    size = "small",
+    srcs = ["timers_test.cc"],
+    deps = [
+        ":timers",
+        "//common:rng",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -1,0 +1,38 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "keyspace",
+    srcs = ["keyspace.cc"],
+    hdrs = ["keyspace.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//common:clock",
+        "//ds/dict",
+        "//resp/encoder",
+        "//resp/parser",
+    ],
+)
+
+cc_library(
+    name = "fake_list",
+    testonly = True,
+    hdrs = ["fake_list.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":keyspace",
+        "//resp/encoder",
+    ],
+)
+
+cc_test(
+    name = "keyspace_test",
+    size = "small",
+    srcs = ["keyspace_test.cc"],
+    deps = [
+        ":fake_list",
+        ":keyspace",
+        "//common:transcript",
+        "@googletest//:gtest_main",
+    ],
+)

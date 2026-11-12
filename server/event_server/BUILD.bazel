@@ -1,0 +1,51 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
+cc_library(
+    name = "event_server",
+    srcs = ["event_server.cc"],
+    hdrs = ["event_server.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//common:clock",
+        "//net/client",
+        "//net/event_loop",
+        "//net/nonblocking",
+        "//net/sockets",
+    ],
+)
+
+cc_binary(
+    name = "server",
+    srcs = ["main.cc"],
+    deps = [
+        ":event_server",
+        "//db/strings",
+    ],
+)
+
+cc_test(
+    name = "event_server_test",
+    size = "small",
+    srcs = ["event_server_test.cc"],
+    deps = [
+        ":event_server",
+        "//common:test_client",
+        "//db/strings",
+        "@googletest//:gtest_main",
+    ],
+)
+
+# redis-benchmark against your server. Skips if it isn't installed.
+#   bazel test -c opt //server/event_server:redis_benchmark_test --test_output=all
+cc_test(
+    name = "redis_benchmark_test",
+    size = "medium",
+    srcs = ["redis_benchmark_test.cc"],
+    tags = ["manual"],
+    deps = [
+        ":event_server",
+        "//db/strings",
+        "@googletest//:gtest_main",
+    ],
+)

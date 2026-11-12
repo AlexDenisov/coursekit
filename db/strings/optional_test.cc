@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "db/strings/strings.h"
-#include "db/strings/transcript.h"
+#include "common/transcript.h"
 
 // Recorded from Redis 8.10 by `python3 tools/redis_reference.py tools/cases/strings.txt`
 // (the "getrange and setrange" and "range edge cases" groups).

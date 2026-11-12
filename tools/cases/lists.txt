@@ -1,0 +1,88 @@
+# db/lists
+## push and range
+LPUSH l a
+LPUSH l b c
+RPUSH l x y
+LRANGE l 0 -1
+LLEN l
+LLEN missing
+LRANGE missing 0 -1
+LRANGE l 1 2
+LRANGE l -2 -1
+LRANGE l -100 100
+LRANGE l 3 1
+LRANGE l 5 10
+LRANGE l -1 -5
+LRANGE l a 1
+LPUSH
+LPUSH l
+## pop
+RPUSH l a b c d e
+LPOP l
+RPOP l
+LPOP l 2
+RPOP l 5
+EXISTS l
+LPOP l
+RPOP missing
+LPOP missing 2
+RPUSH l a
+LPOP l 0
+LPOP l -1
+LPOP l abc
+LPOP l 1 2
+## index and set
+RPUSH l a b c
+LINDEX l 0
+LINDEX l -1
+LINDEX l 3
+LINDEX l -4
+LINDEX missing 0
+LINDEX l x
+LSET l 1 B
+LSET l -1 C
+LRANGE l 0 -1
+LSET l 3 z
+LSET missing 0 z
+## trim
+RPUSH l a b c d e
+LTRIM l 1 -2
+LRANGE l 0 -1
+LTRIM l 5 10
+EXISTS l
+LTRIM missing 0 1
+RPUSH l a b c
+LTRIM l -100 100
+LRANGE l 0 -1
+## pushx
+LPUSHX l a
+RPUSHX l a
+EXISTS l
+RPUSH l a
+LPUSHX l b
+RPUSHX l c d
+LRANGE l 0 -1
+## wrongtype
+SET s v
+LPUSH s a
+LRANGE s 0 -1
+LLEN s
+LPOP s
+RPUSH l a
+GET l
+## lrem and linsert (optional)
+RPUSH l a b a c a
+LREM l 2 a
+LRANGE l 0 -1
+RPUSH m a b a c a
+LREM m -2 a
+LRANGE m 0 -1
+LREM m 0 a
+LRANGE m 0 -1
+LREM missing 0 a
+LINSERT m BEFORE c X
+LINSERT m AFTER c Y
+LINSERT m AFTER nothere Y
+LRANGE m 0 -1
+LINSERT missing BEFORE a b
+LINSERT m MIDDLE c Z

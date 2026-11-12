@@ -1,0 +1,22 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "nonblocking",
+    srcs = ["nonblocking.cc"],
+    hdrs = ["nonblocking.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//net/buffers",
+        "//net/sockets",
+    ],
+)
+
+cc_test(
+    name = "nonblocking_test",
+    size = "small",
+    srcs = ["nonblocking_test.cc"],
+    deps = [
+        ":nonblocking",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -1,0 +1,21 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "glob",
+    srcs = ["glob.cc"],
+    hdrs = ["glob.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "glob_test",
+    size = "small",
+    srcs = [
+        "glob_test.cc",
+        "redis_cases.inc",
+    ],
+    deps = [
+        ":glob",
+        "@googletest//:gtest_main",
+    ],
+)

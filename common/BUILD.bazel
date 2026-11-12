@@ -24,3 +24,30 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "clock",
+    hdrs = ["clock.h"],
+    visibility = ["//visibility:public"],
+)
+
+# Test-only helpers.
+
+cc_library(
+    name = "test_client",
+    testonly = True,
+    hdrs = ["test_client.h"],
+    visibility = ["//visibility:public"],
+    deps = ["@googletest//:gtest"],
+)
+
+cc_library(
+    name = "transcript",
+    testonly = True,
+    hdrs = ["transcript.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "@googletest//:gtest",
+    ],
+)

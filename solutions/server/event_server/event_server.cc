@@ -81,7 +81,10 @@ void EventServer::flush_all() {
 
 void EventServer::close_client(int fd) {
   loop_.remove(fd, kReadable | kWritable);
-  clients_.erase(fd);
+  auto it = clients_.find(fd);
+  if (it == clients_.end()) return;
+  if (close_hook_) close_hook_(*it->second);
+  clients_.erase(it);
 }
 
 }  // namespace rd

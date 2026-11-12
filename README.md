@@ -19,6 +19,22 @@ Codex, Cursor, ...) you turn it into a course built around *your* goals:
 The agent designs the course with you, writes the exercises, keeps the tests
 honest, and gives hints when you're stuck. You write the solutions.
 
+## Example: build your own Redis
+
+A course made from this template: learn how Redis works by building one in
+C++20. The RESP protocol, a single-threaded event loop, the keyspace and its
+data structures, expiry, eviction, persistence, replication and messaging,
+across six tracks. Each track ends in a ★ milestone: a server that
+`redis-cli` and `redis-benchmark` talk to unchanged, checked against replies
+recorded from real Redis.
+
+- **[Open the interactive map](https://alexdenisov.github.io/coursekit/redis/)**:
+  click an exercise to see what it needs.
+- **[Browse the course](https://github.com/AlexDenisov/coursekit/tree/redis)**
+  on the `redis` branch: its README, `curriculum.json`, and the exercises.
+
+[![The map of a course on building Redis: exercises in lanes by track, from protocol and event loop to keyspace, internals, durability and messaging, with milestones marked ★](redis-roadmap.png)](https://alexdenisov.github.io/coursekit/redis/)
+
 ## What's in the template
 
 | File | What it is |

@@ -134,13 +134,24 @@ code, .mono { font-family: var(--font-mono); font-size: 12px; }
 .empty { color: var(--muted); font-size: 13px; margin: 0; }
 .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin: 6px 0 2px; }
 .bar > span { display: block; height: 100%; background: var(--done); }
+.title-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+.made-with {
+  font: 500 12px/1 var(--font-ui); color: var(--muted); text-decoration: none; white-space: nowrap;
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; background: var(--surface);
+}
+.made-with b { color: var(--fg); font-weight: 600; }
+.made-with:hover { border-color: var(--accent); color: var(--fg); }
 @media (prefers-reduced-motion: reduce) { .edge, .node { transition: none; } }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1 id="title">Course map</h1>
+    <div class="title-row">
+      <h1 id="title">Course map</h1>
+      <a class="made-with" href="https://github.com/AlexDenisov/coursekit"
+         title="coursekit: learn a topic by building it, one tested exercise at a time">Made with <b>coursekit</b> ↗</a>
+    </div>
     <p class="sub">Click an exercise to see everything it needs, in an order you can work through. Green boxes are
       done; dashed orange outlines mark what you can start right now. Drag the graph or scroll over it to move
       sideways; zoom with the buttons, Ctrl/⌘ + wheel, a trackpad pinch, or the + − 0 keys. Esc clears the
@@ -186,6 +197,7 @@ code, .mono { font-family: var(--font-mono); font-size: 12px; }
     <div id="panel-main"></div>
     <div id="panel-side"></div>
   </section>
+
 </div>
 
 <!-- curriculum.js: written by tools/sync_curriculum.py from curriculum.json.

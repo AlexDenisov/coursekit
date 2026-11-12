@@ -1,0 +1,62 @@
+# Publishes the example courses' maps to GitHub Pages:
+#   https://alexdenisov.github.io/coursekit/<example>/
+# Each map is the template's current docs/map.html with that course's
+# docs/curriculum.js. Runs on pushes to main; after updating an example branch,
+# run it by hand (Actions → Pages → Run workflow).
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: main
+      - uses: actions/checkout@v4
+        with:
+          ref: redis
+          path: redis
+      - name: Assemble the site
+        run: |
+          mkdir -p site/redis
+          cp main/docs/map.html site/redis/index.html
+          cp redis/docs/curriculum.js site/redis/curriculum.js
+          # The map loads progress.js too; an empty one keeps the browser console quiet
+          # and lets visitors tick exercises by hand.
+          echo "// No test results on the published map." > site/redis/progress.js
+          cat > site/index.html <<'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>coursekit examples</title>
+          <meta http-equiv="refresh" content="0; url=redis/">
+          <p><a href="redis/">Build your own Redis: the course map</a> ·
+             <a href="https://github.com/AlexDenisov/coursekit">coursekit on GitHub</a></p>
+          HTML
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

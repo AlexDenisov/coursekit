@@ -15,8 +15,12 @@ Then:
    (e.g. `db`/`DB_`).
 2. **Platforms.** `MODULE.bazel` fetches clang from
    [mull-project/toolchains](https://github.com/mull-project/toolchains/releases)
-   for `darwin-aarch64` only. For other machines, add their archives
-   (`urls`, `sha256`, `strip_prefix`) from the same release.
+   for macOS on Apple silicon (`darwin-aarch64`) and Linux (`linux-x86_64`,
+   `linux-aarch64`); CI builds on all three. The archives contain no C++
+   standard library: macOS uses libc++ from the SDK (Xcode or the Command
+   Line Tools), Linux links the host's libstdc++ statically (install `g++`,
+   or `libstdc++-<ver>-dev` on Debian/Ubuntu). Other platforms: add their
+   archives from the same release (`urls`, `sha256`, `strip_prefix`).
 3. **Progress.** In `curriculum.json`: `"progress": { "runner": "bazel" }`.
 4. **Check it works:**
    ```sh

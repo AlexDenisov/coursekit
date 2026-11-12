@@ -35,6 +35,7 @@ honest, and gives hints when you're stuck. You write the solutions.
 | `starters/python-uv/` | Python + uv + pytest + ruff, with the same sample exercise |
 | `starters/rust-cargo/` | Rust cargo workspace (one crate per exercise), with the same sample exercise |
 | `starters/solutions/` | The `solutions` branch skeleton: `verify.sh` and its README |
+| `tests/`, `.github/workflows/ci.yml` | End-to-end checks of every starter (with the samples' reference solutions), run in CI on Linux and macOS |
 | [LICENSE](LICENSE), [CONTRIBUTING.md](CONTRIBUTING.md) | MIT; how to improve the template itself |
 
 Requirements: `git`, `python3` (3.9+, standard library only), a browser, and

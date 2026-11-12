@@ -44,20 +44,28 @@ template doesn't need. If you're unsure, open an issue first.
 
 ```sh
 python3 tools/sync_curriculum.py --check      # curriculum valid, generated docs up to date
-python3 -m py_compile tools/*.py tools/runners/*.py
+python3 -m py_compile tools/*.py tools/runners/*.py tests/*.py
 ```
 
 If you touched a starter, a runner, `progress.py` or `verify.sh`, run the
-starter end to end in a scratch copy, as its README describes:
+starter end to end:
 
-1. copy the template and the starter into an empty directory, add
-   `example/prefix_sums` to `curriculum.json`, `git init` and commit;
-2. untouched stub: it builds, its tests fail quickly, and
-   `python3 tools/progress.py` reports it as *not started*;
-3. half-solved stub: *in progress* with the right passing/total counts;
-4. reference solution on an orphan `solutions` worktree: `verify.sh` passes;
-5. a syntax error in the stub: *doesn't compile* (where the runner can tell);
-6. the starter's linters/formatters are clean.
+```sh
+python3 tests/e2e.py cpp-bazel                # or python-uv, rust-cargo; --keep to inspect
+```
+
+It bootstraps a throwaway course from the template and the starter, then
+checks the learner's path: the untouched stub builds and fails and is *not
+started*; an edit makes it *started*; a syntax error shows as *doesn't
+compile* (where the runner can tell); the reference solution passes
+`verify.sh` on an orphan `solutions` worktree; the solution in place makes
+the exercise *done*, optional part included. CI
+(`.github/workflows/ci.yml`) runs it on Linux (x86_64, and arm64 for C++) and
+macOS, plus the starters' linters. Also check the passing/total counts by
+eye once (`--keep`, edit the stub halfway, run `tools/progress.py`).
+
+The reference solutions it uses live in `tests/starters/<starter>/`, never
+in `starters/`, so they can't leak into a course.
 
 If you touched `docs/map.html`, open it with and without `docs/progress.js`,
 in light and dark mode, and at phone width.
@@ -78,6 +86,12 @@ in light and dark mode, and at phone width.
 - `example/prefix_sums/` matching the other starters: the same API,
   pitfall test, brute-force oracle and optional part;
 - `gitignore.append` for the course's `.gitignore`.
+
+Add its test fixture in `tests/starters/<starter>/`: `fixture.json` (the
+`progress` block, the `verify.sh` command, setup commands such as creating
+the lock file, the stub file and a syntax error to inject) and
+`solutions/example/prefix_sums/...` (the reference solution, same paths as
+the stubs). Add it to the CI matrix and the lint job.
 
 Then list it in `README.md`, PLAYBOOK §11 and the bootstrap step in
 `AGENTS.md`.

@@ -441,8 +441,9 @@ A starter with all of this is in [`starters/cpp-bazel/`](starters/cpp-bazel/).
 - **Hermetic clang** from
   [mull-project/toolchains](https://github.com/mull-project/toolchains/releases)
   through `toolchains_llvm`, so the host compiler is never used and every
-  machine builds with the same clang. The starter wires up `darwin-aarch64`
-  (libc++ from the macOS SDK); add the other platforms you need from the
+  machine builds with the same clang. The starter wires up macOS on Apple
+  silicon (libc++ from the macOS SDK) and Linux x86_64/aarch64 (the host's
+  libstdc++, linked statically); add the other platforms you need from the
   same release. `cxx_standard = {"": "c++20"}`.
 - **GoogleTest** (`@googletest//:gtest_main`): `TEST(Suite, FactInCamelCase)`,
   `--test_filter`, JUnit XML for free.

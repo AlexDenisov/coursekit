@@ -1,0 +1,8 @@
+{
+  "progress": { "runner": "cargo" },
+  "verify_cmd": "cargo test -q --workspace",
+  "setup": ["cargo generate-lockfile"],
+  "stub": "example/prefix_sums/src/lib.rs",
+  "break": "\nfn broken(\n",
+  "detects_build_errors": true
+}

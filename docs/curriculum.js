@@ -1,177 +1,1067 @@
 // Written by tools/sync_curriculum.py from curriculum.json; don't edit.
 window.CURRICULUM = {
- "title": "My course",
- "about": "The single source of truth for the course: levels, tracks (goals), domains (directories), exercises, edges and presets. Read by docs/map.html (through docs/curriculum.js), tools/progress.py and tools/sync_curriculum.py. Run `python3 tools/sync_curriculum.py` after every edit. The exercises below are placeholders that show the format; replace them when you bootstrap a course. Rule: an exercise depends only on exercises at its level or below.",
+ "title": "Build your own Redis",
+ "about": "Learn how Redis works by building one in C++20: the RESP protocol, a single-threaded kqueue event loop, the keyspace and its data structures, expiry, eviction, persistence, replication and messaging. The milestones are servers that redis-cli and redis-benchmark talk to unchanged, checked against replies recorded from real Redis. Run `python3 tools/sync_curriculum.py` after every edit. Rule: an exercise depends only on exercises at its level or below.",
  "progress": {
-  "runner": "command",
-  "test": "",
-  "optional_test": "",
-  "build": "",
-  "junit": "",
-  "timeout": 600,
+  "runner": "bazel",
   "start_marker": "TODO(you"
  },
  "levels": [
   {
    "id": "basic",
    "name": "Basic",
-   "meaning": "first contact with the topic; small, self-contained pieces"
+   "meaning": "the protocol, the command table and a blocking server: talk to redis-cli"
   },
   {
    "id": "intermediate",
    "name": "Intermediate",
-   "meaning": "standard material; pieces start to combine"
+   "meaning": "the event loop and the real keyspace: a usable mini Redis"
   },
   {
    "id": "advanced",
    "name": "Advanced",
-   "meaning": "specialised, systems-level, or close to research"
+   "meaning": "compact encodings, eviction, persistence, replication, messaging"
   }
  ],
  "tracks": [
   {
-   "id": "foundations",
+   "id": "protocol",
    "color": "--p1",
-   "name": "Foundations",
-   "goal": "the building blocks every other track uses"
+   "name": "Protocol",
+   "goal": "speak RESP and serve redis-cli from a blocking server"
   },
   {
-   "id": "application",
+   "id": "eventloop",
+   "color": "--p2",
+   "name": "Event loop",
+   "goal": "serve thousands of clients from one thread, the way ae.c does"
+  },
+  {
+   "id": "keyspace",
    "color": "--p3",
-   "name": "Application",
-   "goal": "combine the building blocks into something real"
+   "name": "Keyspace",
+   "goal": "Redis's data model: dict with incremental rehash, typed values, expiry, SCAN"
+  },
+  {
+   "id": "internals",
+   "color": "--p4",
+   "name": "Internals",
+   "goal": "why Redis is small and fast: skiplists, listpacks, intsets, approximate LRU"
+  },
+  {
+   "id": "durability",
+   "color": "--p5",
+   "name": "Durability",
+   "goal": "survive kill -9 and keep a replica in sync: RDB, AOF, PSYNC"
+  },
+  {
+   "id": "messaging",
+   "color": "--p6",
+   "name": "Messaging",
+   "goal": "clients talking to clients: pub/sub, transactions, blocking pops"
   }
  ],
  "domains": [
   {
-   "id": "basics",
-   "name": "Basics"
+   "id": "resp",
+   "name": "RESP protocol"
   },
   {
-   "id": "core",
-   "name": "Core"
+   "id": "net",
+   "name": "Networking"
   },
   {
-   "id": "projects",
-   "name": "Projects"
+   "id": "cmd",
+   "name": "Commands"
+  },
+  {
+   "id": "ds",
+   "name": "Data structures"
+  },
+  {
+   "id": "db",
+   "name": "Database"
+  },
+  {
+   "id": "persist",
+   "name": "Persistence"
+  },
+  {
+   "id": "repl",
+   "name": "Replication"
+  },
+  {
+   "id": "msg",
+   "name": "Messaging"
+  },
+  {
+   "id": "server",
+   "name": "Servers (milestones)"
   }
  ],
  "exercises": [
   {
-   "id": "basics/first_block",
-   "title": "First block",
+   "id": "resp/encoder",
+   "title": "RESP encoder",
    "level": "basic",
    "tracks": [
-    "foundations"
+    "protocol"
    ],
    "kind": "concept",
-   "about": "placeholder: the smallest useful piece; everything else builds on it"
+   "about": "the five RESP2 types on the wire: simple strings, errors, integers, bulk strings, arrays, and the two nulls"
   },
   {
-   "id": "basics/second_block",
-   "title": "Second block",
+   "id": "resp/parser",
+   "title": "Incremental RESP parser",
    "level": "basic",
    "tracks": [
-    "foundations"
+    "protocol"
+   ],
+   "kind": "algo",
+   "about": "parse requests that arrive in arbitrary fragments; 'need more bytes' is a result, not an error; inline commands (optional)"
+  },
+  {
+   "id": "cmd/dispatch",
+   "title": "Command table",
+   "level": "basic",
+   "tracks": [
+    "protocol",
+    "keyspace"
    ],
    "kind": "concept",
-   "about": "placeholder: a second independent piece"
+   "about": "case-insensitive lookup, arity checks and Redis's exact error strings, the way server.c's command table works"
   },
   {
-   "id": "basics/helpers",
-   "title": "Helpers",
+   "id": "db/strings",
+   "title": "String commands",
    "level": "basic",
    "tracks": [
-    "foundations"
+    "protocol",
+    "keyspace"
+   ],
+   "kind": "concept",
+   "about": "GET/SET (NX/XX/GET), DEL, EXISTS, INCR/DECRBY, APPEND, MGET/MSET on a plain map; 64-bit overflow is an error"
+  },
+  {
+   "id": "db/glob",
+   "title": "Glob matching",
+   "level": "basic",
+   "tracks": [
+    "keyspace",
+    "messaging"
+   ],
+   "kind": "algo",
+   "about": "Redis's stringmatchlen: *, ?, [a-z], [^x], escapes; and why the naive backtracker is exponential"
+  },
+  {
+   "id": "net/sockets",
+   "title": "Blocking sockets",
+   "level": "basic",
+   "tracks": [
+    "protocol",
+    "eventloop"
    ],
    "kind": "infra",
-   "given": true,
-   "about": "placeholder: given code (read it, don't write it): parsers, printers, test data"
+   "about": "socket/bind/listen/accept, short reads and short writes, SO_REUSEADDR, SIGPIPE; an echo server"
   },
   {
-   "id": "core/combination",
-   "title": "Combination",
-   "level": "intermediate",
+   "id": "persist/crc64",
+   "title": "CRC-64 (Jones)",
+   "level": "basic",
    "tracks": [
-    "foundations",
-    "application"
+    "durability"
    ],
-   "kind": "concept",
-   "about": "placeholder: uses both blocks"
+   "kind": "algo",
+   "about": "the checksum at the end of every RDB file: bit-by-bit, then table-driven"
   },
   {
-   "id": "core/fast_path",
-   "title": "Fast path",
-   "level": "intermediate",
+   "id": "server/hello_cli",
+   "title": "Hello, redis-cli",
+   "level": "basic",
    "tracks": [
-    "application"
-   ],
-   "kind": "perf",
-   "about": "placeholder: an optimisation with a benchmark"
-  },
-  {
-   "id": "projects/capstone",
-   "title": "Capstone",
-   "level": "advanced",
-   "tracks": [
-    "application"
+    "protocol"
    ],
    "kind": "project",
    "milestone": true,
-   "about": "placeholder: the milestone; runs on real data, built entirely from your own code"
+   "about": "a blocking one-client-at-a-time server; redis-cli connects and PING, ECHO, SET, GET, INCR work"
+  },
+  {
+   "id": "net/buffers",
+   "title": "I/O buffers",
+   "level": "intermediate",
+   "tracks": [
+    "eventloop"
+   ],
+   "kind": "concept",
+   "about": "growable read/write buffers with cheap consume-from-front; amortised compaction instead of memmove per command"
+  },
+  {
+   "id": "net/nonblocking",
+   "title": "Non-blocking I/O",
+   "level": "intermediate",
+   "tracks": [
+    "eventloop"
+   ],
+   "kind": "concept",
+   "about": "O_NONBLOCK, EAGAIN, partial writes and connect-in-progress; read until EAGAIN, write what the kernel takes"
+  },
+  {
+   "id": "net/timers",
+   "title": "Timer events",
+   "level": "intermediate",
+   "tracks": [
+    "eventloop"
+   ],
+   "kind": "algo",
+   "about": "a min-heap of deadlines with cancellation; how long the loop may sleep; tested with a fake clock"
+  },
+  {
+   "id": "net/event_loop",
+   "title": "kqueue event loop",
+   "level": "intermediate",
+   "tracks": [
+    "eventloop"
+   ],
+   "kind": "concept",
+   "about": "Redis's ae.c on kqueue: readable/writable file events, time events, beforeSleep, and deleting a handler while it runs"
+  },
+  {
+   "id": "net/client",
+   "title": "Client state machine",
+   "level": "intermediate",
+   "tracks": [
+    "eventloop"
+   ],
+   "kind": "concept",
+   "about": "query buffer, pipelining, reply buffer, write-when-writable, query-buffer limits and closing a client mid-batch"
+  },
+  {
+   "id": "server/event_server",
+   "title": "Event-driven server",
+   "level": "intermediate",
+   "tracks": [
+    "eventloop"
+   ],
+   "kind": "project",
+   "milestone": true,
+   "about": "one thread, many clients: redis-benchmark -c 50 -P 16 -t ping,set,get runs clean"
+  },
+  {
+   "id": "ds/dict",
+   "title": "Dict with incremental rehash",
+   "level": "intermediate",
+   "tracks": [
+    "keyspace"
+   ],
+   "kind": "algo",
+   "about": "Redis's dict.c: chained buckets, power-of-two tables, rehashing a few buckets per operation so no command ever stalls"
+  },
+  {
+   "id": "ds/dict_scan",
+   "title": "SCAN cursors",
+   "level": "intermediate",
+   "tracks": [
+    "keyspace"
+   ],
+   "kind": "algo",
+   "about": "reverse-binary cursor increments: every key present for the whole scan is returned, even while the table grows or shrinks"
+  },
+  {
+   "id": "db/keyspace",
+   "title": "Typed keyspace",
+   "level": "intermediate",
+   "tracks": [
+    "keyspace"
+   ],
+   "kind": "concept",
+   "about": "move the strings onto your dict; typed values, WRONGTYPE, TYPE, OBJECT ENCODING; lookups that will later expire and track LRU"
+  },
+  {
+   "id": "db/expire",
+   "title": "Expiry",
+   "level": "intermediate",
+   "tracks": [
+    "keyspace"
+   ],
+   "kind": "algo",
+   "about": "EXPIRE/PEXPIRE/TTL/PERSIST, SET EX; lazy expiry on access plus the active cycle that samples 20 keys and repeats while >25% are stale"
+  },
+  {
+   "id": "db/lists",
+   "title": "Lists",
+   "level": "intermediate",
+   "tracks": [
+    "keyspace"
+   ],
+   "kind": "concept",
+   "about": "LPUSH/RPUSH/LPOP/RPOP/LRANGE/LINDEX/LLEN/LTRIM; negative indices and out-of-range ranges; empty lists delete their key"
+  },
+  {
+   "id": "db/hashes",
+   "title": "Hashes",
+   "level": "intermediate",
+   "tracks": [
+    "keyspace"
+   ],
+   "kind": "concept",
+   "about": "HSET/HGET/HDEL/HGETALL/HLEN/HINCRBY on your dict; a dict inside a dict"
+  },
+  {
+   "id": "db/sets",
+   "title": "Sets",
+   "level": "intermediate",
+   "tracks": [
+    "keyspace"
+   ],
+   "kind": "algo",
+   "about": "SADD/SREM/SISMEMBER/SMEMBERS/SCARD and SINTER/SUNION/SDIFF (iterate the smallest set first)"
+  },
+  {
+   "id": "db/generic",
+   "title": "Generic key commands",
+   "level": "intermediate",
+   "tracks": [
+    "keyspace"
+   ],
+   "kind": "concept",
+   "about": "KEYS, SCAN MATCH COUNT TYPE, RENAME, DBSIZE, FLUSHDB, RANDOMKEY; why KEYS is banned in production and SCAN isn't"
+  },
+  {
+   "id": "server/mini_redis",
+   "title": "Mini Redis",
+   "level": "intermediate",
+   "tracks": [
+    "keyspace"
+   ],
+   "kind": "project",
+   "milestone": true,
+   "about": "the event server plus the full keyspace and an active-expiry cron; passes the compatibility suite recorded from real Redis"
+  },
+  {
+   "id": "ds/skiplist",
+   "title": "Skiplist with ranks",
+   "level": "advanced",
+   "tracks": [
+    "internals"
+   ],
+   "kind": "algo",
+   "about": "Redis's zskiplist: p=1/4 levels, backward pointers, span counts for O(log n) rank; deterministic levels for tests"
+  },
+  {
+   "id": "db/zsets",
+   "title": "Sorted sets",
+   "level": "advanced",
+   "tracks": [
+    "internals"
+   ],
+   "kind": "concept",
+   "about": "skiplist + dict: ZADD (NX/XX/GT/LT/INCR), ZSCORE, ZRANK, ZRANGE BYSCORE/REV/LIMIT; score formatting that matches Redis byte for byte"
+  },
+  {
+   "id": "ds/intset",
+   "title": "Intset",
+   "level": "advanced",
+   "tracks": [
+    "internals"
+   ],
+   "kind": "algo",
+   "about": "a sorted array of 16/32/64-bit integers that upgrades its encoding in place; binary search; little-endian on disk"
+  },
+  {
+   "id": "ds/listpack",
+   "title": "Listpack",
+   "level": "advanced",
+   "tracks": [
+    "internals"
+   ],
+   "kind": "algo",
+   "about": "one contiguous allocation of variable-length entries with back-lengths for reverse walks; why it replaced ziplist (cascading updates)"
+  },
+  {
+   "id": "db/encodings",
+   "title": "Compact encodings",
+   "level": "advanced",
+   "tracks": [
+    "internals"
+   ],
+   "kind": "perf",
+   "about": "small hashes/sets/zsets/lists live in listpacks and intsets and convert past the *-max-listpack-* thresholds; OBJECT ENCODING matches real Redis"
+  },
+  {
+   "id": "db/eviction",
+   "title": "maxmemory and approximate LRU",
+   "level": "advanced",
+   "tracks": [
+    "internals"
+   ],
+   "kind": "algo",
+   "about": "memory accounting, a 24-bit LRU clock, sampling with an eviction pool of 16; allkeys-lru, volatile-ttl; LFU's log counter (optional)"
+  },
+  {
+   "id": "server/lean_redis",
+   "title": "Lean Redis",
+   "level": "advanced",
+   "tracks": [
+    "internals"
+   ],
+   "kind": "project",
+   "milestone": true,
+   "about": "a leaderboard on sorted sets under maxmemory with eviction; redis-benchmark within 2x of real Redis, memory within 1.5x"
+  },
+  {
+   "id": "persist/rdb_writer",
+   "title": "RDB writer",
+   "level": "advanced",
+   "tracks": [
+    "durability"
+   ],
+   "kind": "concept",
+   "about": "the RDB format: length encoding, int-encoded strings, opcodes for expiry and SELECT, the CRC-64 trailer; real Redis must load your file"
+  },
+  {
+   "id": "persist/rdb_reader",
+   "title": "RDB reader",
+   "level": "advanced",
+   "tracks": [
+    "durability"
+   ],
+   "kind": "concept",
+   "about": "load dump.rdb files written by real Redis and by your writer; reject a bad checksum; skip already-expired keys"
+  },
+  {
+   "id": "persist/bgsave",
+   "title": "BGSAVE with fork",
+   "level": "advanced",
+   "tracks": [
+    "durability"
+   ],
+   "kind": "concept",
+   "about": "fork + copy-on-write snapshots, write to temp then rename, reap the child from a timer; why the parent must not rehash during a save"
+  },
+  {
+   "id": "persist/aof",
+   "title": "Append-only file",
+   "level": "advanced",
+   "tracks": [
+    "durability"
+   ],
+   "kind": "concept",
+   "about": "log writes as RESP, appendfsync always/everysec/no, replay on startup through your parser, recover from a truncated tail"
+  },
+  {
+   "id": "persist/aof_rewrite",
+   "title": "AOF rewrite",
+   "level": "advanced",
+   "tracks": [
+    "durability"
+   ],
+   "kind": "concept",
+   "about": "compact the log from a forked snapshot while new writes keep arriving; swap files atomically"
+  },
+  {
+   "id": "repl/backlog",
+   "title": "Replication backlog",
+   "level": "advanced",
+   "tracks": [
+    "durability"
+   ],
+   "kind": "algo",
+   "about": "a ring buffer addressed by global replication offset: can this replica resume from offset N, or does it need a full sync?"
+  },
+  {
+   "id": "repl/replica",
+   "title": "Replica and PSYNC",
+   "level": "advanced",
+   "tracks": [
+    "durability"
+   ],
+   "kind": "concept",
+   "about": "REPLICAOF: handshake, full sync by RDB transfer, then the live command stream; partial resync after a disconnect; REPLCONF ACK"
+  },
+  {
+   "id": "server/durable_redis",
+   "title": "Durable Redis",
+   "level": "advanced",
+   "tracks": [
+    "durability"
+   ],
+   "kind": "project",
+   "milestone": true,
+   "about": "kill -9 loses at most a second of writes; real Redis loads your dump.rdb; your replica follows a real Redis primary"
+  },
+  {
+   "id": "msg/pubsub",
+   "title": "Pub/Sub",
+   "level": "advanced",
+   "tracks": [
+    "messaging"
+   ],
+   "kind": "concept",
+   "about": "SUBSCRIBE/PSUBSCRIBE/PUBLISH/UNSUBSCRIBE, the restricted subscriber mode, and why a slow subscriber needs an output-buffer limit"
+  },
+  {
+   "id": "msg/transactions",
+   "title": "MULTI/EXEC/WATCH",
+   "level": "advanced",
+   "tracks": [
+    "messaging"
+   ],
+   "kind": "concept",
+   "about": "queued commands, EXECABORT on syntax errors vs runtime errors inside EXEC, optimistic locking with WATCH and touched keys"
+  },
+  {
+   "id": "msg/blocking",
+   "title": "Blocking pops",
+   "level": "advanced",
+   "tracks": [
+    "messaging"
+   ],
+   "kind": "algo",
+   "about": "BLPOP/BRPOP across several keys with timeouts; wake the longest waiter first; serve after the pushing command, not inside it"
+  },
+  {
+   "id": "server/messaging_redis",
+   "title": "Messaging Redis",
+   "level": "advanced",
+   "tracks": [
+    "messaging"
+   ],
+   "kind": "project",
+   "milestone": true,
+   "about": "a chat over redis-cli SUBSCRIBE, a job queue with BLPOP workers, and a WATCH-guarded counter that never loses an increment"
   }
  ],
  "edges": [
   [
-   "basics/first_block",
-   "core/combination",
+   "resp/encoder",
+   "resp/parser",
+   "learn",
+   "see the format from the writing side first"
+  ],
+  [
+   "resp/encoder",
+   "cmd/dispatch",
+   "req",
+   "replies are encoded to compare bytes"
+  ],
+  [
+   "cmd/dispatch",
+   "db/strings",
+   "req",
+   "commands register in the table"
+  ],
+  [
+   "resp/parser",
+   "server/hello_cli",
    "req"
   ],
   [
-   "basics/second_block",
-   "core/combination",
+   "resp/encoder",
+   "server/hello_cli",
+   "req"
+  ],
+  [
+   "cmd/dispatch",
+   "server/hello_cli",
+   "req"
+  ],
+  [
+   "db/strings",
+   "server/hello_cli",
+   "req"
+  ],
+  [
+   "net/sockets",
+   "server/hello_cli",
+   "req",
+   "the accept/read/write loop"
+  ],
+  [
+   "net/sockets",
+   "net/buffers",
+   "learn",
+   "short reads are why buffers exist"
+  ],
+  [
+   "net/sockets",
+   "net/nonblocking",
+   "req"
+  ],
+  [
+   "net/buffers",
+   "net/nonblocking",
+   "req",
+   "partial writes stay in the buffer"
+  ],
+  [
+   "net/timers",
+   "net/event_loop",
+   "req"
+  ],
+  [
+   "net/nonblocking",
+   "net/event_loop",
+   "req"
+  ],
+  [
+   "resp/parser",
+   "net/client",
+   "req",
+   "parse every complete command in the query buffer"
+  ],
+  [
+   "resp/encoder",
+   "net/client",
+   "req"
+  ],
+  [
+   "net/buffers",
+   "net/client",
+   "req"
+  ],
+  [
+   "net/event_loop",
+   "server/event_server",
+   "req"
+  ],
+  [
+   "net/client",
+   "server/event_server",
+   "req"
+  ],
+  [
+   "cmd/dispatch",
+   "server/event_server",
+   "req"
+  ],
+  [
+   "db/strings",
+   "server/event_server",
+   "req",
+   "SET/GET for redis-benchmark"
+  ],
+  [
+   "server/hello_cli",
+   "server/event_server",
+   "learn",
+   "same wiring, now non-blocking"
+  ],
+  [
+   "ds/dict",
+   "ds/dict_scan",
+   "req"
+  ],
+  [
+   "ds/dict",
+   "db/keyspace",
+   "req"
+  ],
+  [
+   "db/strings",
+   "db/keyspace",
+   "req",
+   "the string commands move onto your dict"
+  ],
+  [
+   "db/keyspace",
+   "db/expire",
+   "req"
+  ],
+  [
+   "db/keyspace",
+   "db/lists",
+   "req"
+  ],
+  [
+   "db/keyspace",
+   "db/hashes",
+   "req"
+  ],
+  [
+   "ds/dict",
+   "db/hashes",
+   "req",
+   "a hash's fields live in a dict"
+  ],
+  [
+   "db/keyspace",
+   "db/sets",
+   "req"
+  ],
+  [
+   "ds/dict",
+   "db/sets",
+   "req"
+  ],
+  [
+   "db/keyspace",
+   "db/generic",
+   "req"
+  ],
+  [
+   "db/glob",
+   "db/generic",
+   "req",
+   "KEYS and SCAN MATCH"
+  ],
+  [
+   "ds/dict_scan",
+   "db/generic",
+   "req"
+  ],
+  [
+   "db/expire",
+   "db/generic",
    "part",
-   "only one function"
+   "only for RENAME keeps the TTL"
   ],
   [
-   "basics/helpers",
-   "core/combination",
-   "learn"
-  ],
-  [
-   "core/combination",
-   "core/fast_path",
+   "server/event_server",
+   "server/mini_redis",
    "req"
   ],
   [
-   "core/combination",
-   "projects/capstone",
+   "db/expire",
+   "server/mini_redis",
+   "req",
+   "active expiry runs as a time event"
+  ],
+  [
+   "db/lists",
+   "server/mini_redis",
    "req"
   ],
   [
-   "core/fast_path",
-   "projects/capstone",
-   "real",
-   "only the real-data test"
+   "db/hashes",
+   "server/mini_redis",
+   "req"
   ],
   [
-   "basics/second_block",
-   "projects/capstone",
+   "db/sets",
+   "server/mini_redis",
+   "req"
+  ],
+  [
+   "db/generic",
+   "server/mini_redis",
+   "req"
+  ],
+  [
+   "ds/skiplist",
+   "db/zsets",
+   "req"
+  ],
+  [
+   "ds/dict",
+   "db/zsets",
+   "req",
+   "member -> score"
+  ],
+  [
+   "db/keyspace",
+   "db/zsets",
+   "req"
+  ],
+  [
+   "ds/intset",
+   "db/encodings",
+   "req",
+   "small integer sets"
+  ],
+  [
+   "ds/listpack",
+   "db/encodings",
+   "req"
+  ],
+  [
+   "db/lists",
+   "db/encodings",
+   "req"
+  ],
+  [
+   "db/hashes",
+   "db/encodings",
+   "req"
+  ],
+  [
+   "db/sets",
+   "db/encodings",
+   "req"
+  ],
+  [
+   "db/zsets",
+   "db/encodings",
+   "req"
+  ],
+  [
+   "db/keyspace",
+   "db/eviction",
+   "req"
+  ],
+  [
+   "db/expire",
+   "db/eviction",
+   "req",
+   "volatile-* policies"
+  ],
+  [
+   "server/mini_redis",
+   "server/lean_redis",
+   "req"
+  ],
+  [
+   "db/zsets",
+   "server/lean_redis",
+   "req"
+  ],
+  [
+   "db/encodings",
+   "server/lean_redis",
+   "req"
+  ],
+  [
+   "db/eviction",
+   "server/lean_redis",
+   "req"
+  ],
+  [
+   "persist/crc64",
+   "persist/rdb_writer",
+   "req"
+  ],
+  [
+   "db/keyspace",
+   "persist/rdb_writer",
+   "req"
+  ],
+  [
+   "db/expire",
+   "persist/rdb_writer",
+   "req"
+  ],
+  [
+   "db/lists",
+   "persist/rdb_writer",
+   "req"
+  ],
+  [
+   "db/hashes",
+   "persist/rdb_writer",
+   "req"
+  ],
+  [
+   "db/sets",
+   "persist/rdb_writer",
+   "req"
+  ],
+  [
+   "db/zsets",
+   "persist/rdb_writer",
    "idea",
-   "helpful background"
+   "sorted sets in RDB are an optional section"
+  ],
+  [
+   "persist/rdb_writer",
+   "persist/rdb_reader",
+   "req",
+   "round-trip tests"
+  ],
+  [
+   "persist/rdb_writer",
+   "persist/bgsave",
+   "req"
+  ],
+  [
+   "net/event_loop",
+   "persist/bgsave",
+   "req",
+   "reap the child from a time event"
+  ],
+  [
+   "resp/parser",
+   "persist/aof",
+   "req",
+   "replay the log"
+  ],
+  [
+   "resp/encoder",
+   "persist/aof",
+   "req"
+  ],
+  [
+   "cmd/dispatch",
+   "persist/aof",
+   "req"
+  ],
+  [
+   "db/keyspace",
+   "persist/aof",
+   "req"
+  ],
+  [
+   "persist/aof",
+   "persist/aof_rewrite",
+   "req"
+  ],
+  [
+   "persist/bgsave",
+   "persist/aof_rewrite",
+   "req",
+   "the same fork machinery"
+  ],
+  [
+   "repl/backlog",
+   "repl/replica",
+   "req"
+  ],
+  [
+   "persist/rdb_reader",
+   "repl/replica",
+   "req",
+   "full sync loads an RDB"
+  ],
+  [
+   "server/event_server",
+   "repl/replica",
+   "req"
+  ],
+  [
+   "server/mini_redis",
+   "server/durable_redis",
+   "req"
+  ],
+  [
+   "persist/bgsave",
+   "server/durable_redis",
+   "req"
+  ],
+  [
+   "persist/rdb_reader",
+   "server/durable_redis",
+   "req"
+  ],
+  [
+   "persist/aof_rewrite",
+   "server/durable_redis",
+   "req"
+  ],
+  [
+   "repl/replica",
+   "server/durable_redis",
+   "req"
+  ],
+  [
+   "cmd/dispatch",
+   "msg/pubsub",
+   "req"
+  ],
+  [
+   "db/glob",
+   "msg/pubsub",
+   "req",
+   "PSUBSCRIBE patterns"
+  ],
+  [
+   "net/client",
+   "msg/pubsub",
+   "learn",
+   "subscriber output buffers"
+  ],
+  [
+   "cmd/dispatch",
+   "msg/transactions",
+   "req"
+  ],
+  [
+   "db/keyspace",
+   "msg/transactions",
+   "req",
+   "WATCH tracks touched keys"
+  ],
+  [
+   "db/lists",
+   "msg/blocking",
+   "req"
+  ],
+  [
+   "net/timers",
+   "msg/blocking",
+   "req",
+   "timeouts"
+  ],
+  [
+   "server/mini_redis",
+   "server/messaging_redis",
+   "req"
+  ],
+  [
+   "msg/pubsub",
+   "server/messaging_redis",
+   "req"
+  ],
+  [
+   "msg/transactions",
+   "server/messaging_redis",
+   "req"
+  ],
+  [
+   "msg/blocking",
+   "server/messaging_redis",
+   "req"
   ]
  ],
  "presets": [
   {
-   "label": "Capstone",
+   "label": "★ Hello, redis-cli",
    "targets": [
-    "projects/capstone"
+    "server/hello_cli"
    ]
+  },
+  {
+   "label": "★ Event-driven server",
+   "targets": [
+    "server/event_server"
+   ]
+  },
+  {
+   "label": "★ Mini Redis (the main goal)",
+   "targets": [
+    "server/mini_redis"
+   ]
+  },
+  {
+   "label": "★ Lean Redis",
+   "targets": [
+    "server/lean_redis"
+   ]
+  },
+  {
+   "label": "★ Durable Redis",
+   "targets": [
+    "server/durable_redis"
+   ]
+  },
+  {
+   "label": "★ Messaging Redis",
+   "targets": [
+    "server/messaging_redis"
+   ]
+  },
+  {
+   "label": "Shortest path to the event loop",
+   "targets": [
+    "server/event_server"
+   ],
+   "mode": "code"
   },
   {
    "label": "All basics",
    "level": "basic"
+  },
+  {
+   "label": "Up to intermediate",
+   "level": "intermediate"
   }
  ],
- "_hash": "adaf09dd6cf2"
+ "_hash": "7aebffa37018"
 };

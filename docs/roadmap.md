@@ -6,36 +6,108 @@ The interactive version, with dependencies, is [map.html](map.html).
 Exercises are listed under their main track; ★ marks milestones, *(given)* code you read
 rather than write.
 
-## Foundations
+## Protocol
 
-The building blocks every other track uses.
+Speak RESP and serve redis-cli from a blocking server.
 
 **Basic**
 
 | Exercise | | What |
 |---|---|---|
-| `basics/first_block` | First block | placeholder: the smallest useful piece; everything else builds on it |
-| `basics/second_block` | Second block | placeholder: a second independent piece |
-| `basics/helpers` | Helpers *(given)* | placeholder: given code (read it, don't write it): parsers, printers, test data |
+| `resp/encoder` | RESP encoder | the five RESP2 types on the wire: simple strings, errors, integers, bulk strings, arrays, and the two nulls |
+| `resp/parser` | Incremental RESP parser | parse requests that arrive in arbitrary fragments; 'need more bytes' is a result, not an error; inline commands (optional) |
+| `cmd/dispatch` | Command table | case-insensitive lookup, arity checks and Redis's exact error strings, the way server.c's command table works |
+| `db/strings` | String commands | GET/SET (NX/XX/GET), DEL, EXISTS, INCR/DECRBY, APPEND, MGET/MSET on a plain map; 64-bit overflow is an error |
+| `net/sockets` | Blocking sockets | socket/bind/listen/accept, short reads and short writes, SO_REUSEADDR, SIGPIPE; an echo server |
+| `server/hello_cli` | ★ Hello, redis-cli | a blocking one-client-at-a-time server; redis-cli connects and PING, ECHO, SET, GET, INCR work |
+
+## Event loop
+
+Serve thousands of clients from one thread, the way ae.c does.
 
 **Intermediate**
 
 | Exercise | | What |
 |---|---|---|
-| `core/combination` | Combination | placeholder: uses both blocks |
+| `net/buffers` | I/O buffers | growable read/write buffers with cheap consume-from-front; amortised compaction instead of memmove per command |
+| `net/nonblocking` | Non-blocking I/O | O_NONBLOCK, EAGAIN, partial writes and connect-in-progress; read until EAGAIN, write what the kernel takes |
+| `net/timers` | Timer events | a min-heap of deadlines with cancellation; how long the loop may sleep; tested with a fake clock |
+| `net/event_loop` | kqueue event loop | Redis's ae.c on kqueue: readable/writable file events, time events, beforeSleep, and deleting a handler while it runs |
+| `net/client` | Client state machine | query buffer, pipelining, reply buffer, write-when-writable, query-buffer limits and closing a client mid-batch |
+| `server/event_server` | ★ Event-driven server | one thread, many clients: redis-benchmark -c 50 -P 16 -t ping,set,get runs clean |
 
-## Application
+## Keyspace
 
-Combine the building blocks into something real.
+Redis's data model: dict with incremental rehash, typed values, expiry, SCAN.
+
+**Basic**
+
+| Exercise | | What |
+|---|---|---|
+| `db/glob` | Glob matching | Redis's stringmatchlen: *, ?, [a-z], [^x], escapes; and why the naive backtracker is exponential |
 
 **Intermediate**
 
 | Exercise | | What |
 |---|---|---|
-| `core/fast_path` | Fast path | placeholder: an optimisation with a benchmark |
+| `ds/dict` | Dict with incremental rehash | Redis's dict.c: chained buckets, power-of-two tables, rehashing a few buckets per operation so no command ever stalls |
+| `ds/dict_scan` | SCAN cursors | reverse-binary cursor increments: every key present for the whole scan is returned, even while the table grows or shrinks |
+| `db/keyspace` | Typed keyspace | move the strings onto your dict; typed values, WRONGTYPE, TYPE, OBJECT ENCODING; lookups that will later expire and track LRU |
+| `db/expire` | Expiry | EXPIRE/PEXPIRE/TTL/PERSIST, SET EX; lazy expiry on access plus the active cycle that samples 20 keys and repeats while >25% are stale |
+| `db/lists` | Lists | LPUSH/RPUSH/LPOP/RPOP/LRANGE/LINDEX/LLEN/LTRIM; negative indices and out-of-range ranges; empty lists delete their key |
+| `db/hashes` | Hashes | HSET/HGET/HDEL/HGETALL/HLEN/HINCRBY on your dict; a dict inside a dict |
+| `db/sets` | Sets | SADD/SREM/SISMEMBER/SMEMBERS/SCARD and SINTER/SUNION/SDIFF (iterate the smallest set first) |
+| `db/generic` | Generic key commands | KEYS, SCAN MATCH COUNT TYPE, RENAME, DBSIZE, FLUSHDB, RANDOMKEY; why KEYS is banned in production and SCAN isn't |
+| `server/mini_redis` | ★ Mini Redis | the event server plus the full keyspace and an active-expiry cron; passes the compatibility suite recorded from real Redis |
+
+## Internals
+
+Why Redis is small and fast: skiplists, listpacks, intsets, approximate LRU.
 
 **Advanced**
 
 | Exercise | | What |
 |---|---|---|
-| `projects/capstone` | ★ Capstone | placeholder: the milestone; runs on real data, built entirely from your own code |
+| `ds/skiplist` | Skiplist with ranks | Redis's zskiplist: p=1/4 levels, backward pointers, span counts for O(log n) rank; deterministic levels for tests |
+| `db/zsets` | Sorted sets | skiplist + dict: ZADD (NX/XX/GT/LT/INCR), ZSCORE, ZRANK, ZRANGE BYSCORE/REV/LIMIT; score formatting that matches Redis byte for byte |
+| `ds/intset` | Intset | a sorted array of 16/32/64-bit integers that upgrades its encoding in place; binary search; little-endian on disk |
+| `ds/listpack` | Listpack | one contiguous allocation of variable-length entries with back-lengths for reverse walks; why it replaced ziplist (cascading updates) |
+| `db/encodings` | Compact encodings | small hashes/sets/zsets/lists live in listpacks and intsets and convert past the *-max-listpack-* thresholds; OBJECT ENCODING matches real Redis |
+| `db/eviction` | maxmemory and approximate LRU | memory accounting, a 24-bit LRU clock, sampling with an eviction pool of 16; allkeys-lru, volatile-ttl; LFU's log counter (optional) |
+| `server/lean_redis` | ★ Lean Redis | a leaderboard on sorted sets under maxmemory with eviction; redis-benchmark within 2x of real Redis, memory within 1.5x |
+
+## Durability
+
+Survive kill -9 and keep a replica in sync: RDB, AOF, PSYNC.
+
+**Basic**
+
+| Exercise | | What |
+|---|---|---|
+| `persist/crc64` | CRC-64 (Jones) | the checksum at the end of every RDB file: bit-by-bit, then table-driven |
+
+**Advanced**
+
+| Exercise | | What |
+|---|---|---|
+| `persist/rdb_writer` | RDB writer | the RDB format: length encoding, int-encoded strings, opcodes for expiry and SELECT, the CRC-64 trailer; real Redis must load your file |
+| `persist/rdb_reader` | RDB reader | load dump.rdb files written by real Redis and by your writer; reject a bad checksum; skip already-expired keys |
+| `persist/bgsave` | BGSAVE with fork | fork + copy-on-write snapshots, write to temp then rename, reap the child from a timer; why the parent must not rehash during a save |
+| `persist/aof` | Append-only file | log writes as RESP, appendfsync always/everysec/no, replay on startup through your parser, recover from a truncated tail |
+| `persist/aof_rewrite` | AOF rewrite | compact the log from a forked snapshot while new writes keep arriving; swap files atomically |
+| `repl/backlog` | Replication backlog | a ring buffer addressed by global replication offset: can this replica resume from offset N, or does it need a full sync? |
+| `repl/replica` | Replica and PSYNC | REPLICAOF: handshake, full sync by RDB transfer, then the live command stream; partial resync after a disconnect; REPLCONF ACK |
+| `server/durable_redis` | ★ Durable Redis | kill -9 loses at most a second of writes; real Redis loads your dump.rdb; your replica follows a real Redis primary |
+
+## Messaging
+
+Clients talking to clients: pub/sub, transactions, blocking pops.
+
+**Advanced**
+
+| Exercise | | What |
+|---|---|---|
+| `msg/pubsub` | Pub/Sub | SUBSCRIBE/PSUBSCRIBE/PUBLISH/UNSUBSCRIBE, the restricted subscriber mode, and why a slow subscriber needs an output-buffer limit |
+| `msg/transactions` | MULTI/EXEC/WATCH | queued commands, EXECABORT on syntax errors vs runtime errors inside EXEC, optimistic locking with WATCH and touched keys |
+| `msg/blocking` | Blocking pops | BLPOP/BRPOP across several keys with timeouts; wake the longest waiter first; serve after the pushing command, not inside it |
+| `server/messaging_redis` | ★ Messaging Redis | a chat over redis-cli SUBSCRIBE, a job queue with BLPOP workers, and a WATCH-guarded counter that never loses an increment |

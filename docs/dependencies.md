@@ -8,26 +8,153 @@ or an optional part), `real` (dashed: only a real-data test or bench needs it),
 
 ```mermaid
 flowchart LR
-  subgraph foundations["Foundations"]
-    n0["First block<br/><small>basics/first_block</small>"]
-    n1["Second block<br/><small>basics/second_block</small>"]
-    n2["Helpers<br/><small>basics/helpers</small>"]
-    n3["Combination<br/><small>core/combination</small>"]
+  subgraph protocol["Protocol"]
+    n0["RESP encoder<br/><small>resp/encoder</small>"]
+    n1["Incremental RESP parser<br/><small>resp/parser</small>"]
+    n2["Command table<br/><small>cmd/dispatch</small>"]
+    n3["String commands<br/><small>db/strings</small>"]
+    n5["Blocking sockets<br/><small>net/sockets</small>"]
+    n7["★ Hello, redis-cli<br/><small>server/hello_cli</small>"]
   end
-  subgraph application["Application"]
-    n4["Fast path<br/><small>core/fast_path</small>"]
-    n5["★ Capstone<br/><small>projects/capstone</small>"]
+  subgraph eventloop["Event loop"]
+    n8["I/O buffers<br/><small>net/buffers</small>"]
+    n9["Non-blocking I/O<br/><small>net/nonblocking</small>"]
+    n10["Timer events<br/><small>net/timers</small>"]
+    n11["kqueue event loop<br/><small>net/event_loop</small>"]
+    n12["Client state machine<br/><small>net/client</small>"]
+    n13["★ Event-driven server<br/><small>server/event_server</small>"]
   end
-  n0 --> n3
-  n1 -.->|only one function| n3
-  n2 ==> n3
-  n3 --> n4
-  n3 --> n5
-  n4 -.->|only the real-data test| n5
+  subgraph keyspace["Keyspace"]
+    n4["Glob matching<br/><small>db/glob</small>"]
+    n14["Dict with incremental rehash<br/><small>ds/dict</small>"]
+    n15["SCAN cursors<br/><small>ds/dict_scan</small>"]
+    n16["Typed keyspace<br/><small>db/keyspace</small>"]
+    n17["Expiry<br/><small>db/expire</small>"]
+    n18["Lists<br/><small>db/lists</small>"]
+    n19["Hashes<br/><small>db/hashes</small>"]
+    n20["Sets<br/><small>db/sets</small>"]
+    n21["Generic key commands<br/><small>db/generic</small>"]
+    n22["★ Mini Redis<br/><small>server/mini_redis</small>"]
+  end
+  subgraph internals["Internals"]
+    n23["Skiplist with ranks<br/><small>ds/skiplist</small>"]
+    n24["Sorted sets<br/><small>db/zsets</small>"]
+    n25["Intset<br/><small>ds/intset</small>"]
+    n26["Listpack<br/><small>ds/listpack</small>"]
+    n27["Compact encodings<br/><small>db/encodings</small>"]
+    n28["maxmemory and approximate LRU<br/><small>db/eviction</small>"]
+    n29["★ Lean Redis<br/><small>server/lean_redis</small>"]
+  end
+  subgraph durability["Durability"]
+    n6["CRC-64 (Jones)<br/><small>persist/crc64</small>"]
+    n30["RDB writer<br/><small>persist/rdb_writer</small>"]
+    n31["RDB reader<br/><small>persist/rdb_reader</small>"]
+    n32["BGSAVE with fork<br/><small>persist/bgsave</small>"]
+    n33["Append-only file<br/><small>persist/aof</small>"]
+    n34["AOF rewrite<br/><small>persist/aof_rewrite</small>"]
+    n35["Replication backlog<br/><small>repl/backlog</small>"]
+    n36["Replica and PSYNC<br/><small>repl/replica</small>"]
+    n37["★ Durable Redis<br/><small>server/durable_redis</small>"]
+  end
+  subgraph messaging["Messaging"]
+    n38["Pub/Sub<br/><small>msg/pubsub</small>"]
+    n39["MULTI/EXEC/WATCH<br/><small>msg/transactions</small>"]
+    n40["Blocking pops<br/><small>msg/blocking</small>"]
+    n41["★ Messaging Redis<br/><small>server/messaging_redis</small>"]
+  end
+  n0 ==>|see the format from the writing side first| n1
+  n0 -->|replies are encoded to compare bytes| n2
+  n2 -->|commands register in the table| n3
+  n1 --> n7
+  n0 --> n7
+  n2 --> n7
+  n3 --> n7
+  n5 -->|the accept/read/write loop| n7
+  n5 ==>|short reads are why buffers exist| n8
+  n5 --> n9
+  n8 -->|partial writes stay in the buffer| n9
+  n10 --> n11
+  n9 --> n11
+  n1 -->|parse every complete command in the query buffer| n12
+  n0 --> n12
+  n8 --> n12
+  n11 --> n13
+  n12 --> n13
+  n2 --> n13
+  n3 -->|SET/GET for redis-benchmark| n13
+  n7 ==>|same wiring, now non-blocking| n13
+  n14 --> n15
+  n14 --> n16
+  n3 -->|the string commands move onto your dict| n16
+  n16 --> n17
+  n16 --> n18
+  n16 --> n19
+  n14 -->|a hash's fields live in a dict| n19
+  n16 --> n20
+  n14 --> n20
+  n16 --> n21
+  n4 -->|KEYS and SCAN MATCH| n21
+  n15 --> n21
+  n17 -.->|only for RENAME keeps the TTL| n21
+  n13 --> n22
+  n17 -->|active expiry runs as a time event| n22
+  n18 --> n22
+  n19 --> n22
+  n20 --> n22
+  n21 --> n22
+  n23 --> n24
+  n14 -->|member -> score| n24
+  n16 --> n24
+  n25 -->|small integer sets| n27
+  n26 --> n27
+  n18 --> n27
+  n19 --> n27
+  n20 --> n27
+  n24 --> n27
+  n16 --> n28
+  n17 -->|volatile-* policies| n28
+  n22 --> n29
+  n24 --> n29
+  n27 --> n29
+  n28 --> n29
+  n6 --> n30
+  n16 --> n30
+  n17 --> n30
+  n18 --> n30
+  n19 --> n30
+  n20 --> n30
+  n30 -->|round-trip tests| n31
+  n30 --> n32
+  n11 -->|reap the child from a time event| n32
+  n1 -->|replay the log| n33
+  n0 --> n33
+  n2 --> n33
+  n16 --> n33
+  n33 --> n34
+  n32 -->|the same fork machinery| n34
+  n35 --> n36
+  n31 -->|full sync loads an RDB| n36
+  n13 --> n36
+  n22 --> n37
+  n32 --> n37
+  n31 --> n37
+  n34 --> n37
+  n36 --> n37
+  n2 --> n38
+  n4 -->|PSUBSCRIBE patterns| n38
+  n12 ==>|subscriber output buffers| n38
+  n2 --> n39
+  n16 -->|WATCH tracks touched keys| n39
+  n18 --> n40
+  n10 -->|timeouts| n40
+  n22 --> n41
+  n38 --> n41
+  n39 --> n41
+  n40 --> n41
 ```
 
 ## Helpful background (not drawn)
 
 | For | Read first | Why |
 |---|---|---|
-| `projects/capstone` | `basics/second_block` | helpful background |
+| `persist/rdb_writer` | `db/zsets` | sorted sets in RDB are an optional section |

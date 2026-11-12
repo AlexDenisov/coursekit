@@ -1,0 +1,16 @@
+# Written by tools/progress.py from your own test results
+/docs/progress.js
+__pycache__/
+.venv/
+.junit/
+/data/
+.DS_Store
+
+# Starters are templates: lock files and build outputs are created when a course
+# is bootstrapped from them, and committed in the course, not here.
+/starters/python-uv/uv.lock
+/starters/python-uv/.venv/
+/starters/rust-cargo/Cargo.lock
+/starters/rust-cargo/target/
+/starters/cpp-bazel/MODULE.bazel.lock
+/starters/cpp-bazel/bazel-*

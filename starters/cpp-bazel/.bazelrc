@@ -1,0 +1,18 @@
+common --incompatible_strict_action_env
+# -Wno-unused-parameter: stubs ignore their arguments and must still compile cleanly.
+build --copt=-Wall --copt=-Wextra --copt=-Wno-unused-parameter
+test --test_output=errors
+
+# bazel test --config=asan //...   AddressSanitizer + UBSan
+build:asan --copt=-fsanitize=address,undefined --linkopt=-fsanitize=address,undefined
+build:asan --copt=-fno-omit-frame-pointer --copt=-g -c dbg
+
+# bazel run --config=opt //<exercise>:bench   benchmarks (and slow real-data tests)
+build:opt -c opt
+
+# Files tests write to $TEST_UNDECLARED_OUTPUTS_DIR (SVG, DOT, ...) land unzipped in
+# bazel-testlogs/<package>/<test>/test.outputs/
+test --nozip_undeclared_test_outputs
+
+# Machine-local settings (paths to downloaded data, ...); git-ignored.
+try-import %workspace%/user.bazelrc

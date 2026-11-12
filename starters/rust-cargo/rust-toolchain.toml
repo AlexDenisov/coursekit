@@ -1,0 +1,4 @@
+# Pinned so the course builds the same way next year. rustup installs it on first use.
+[toolchain]
+channel = "1.99.1"
+components = ["clippy", "rustfmt", "rust-analyzer"]

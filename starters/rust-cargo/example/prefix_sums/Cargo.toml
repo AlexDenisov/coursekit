@@ -1,0 +1,11 @@
+[package]
+name = "prefix_sums"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+
+[dev-dependencies]
+common = { path = "../../common" }
+
+[lints]
+workspace = true

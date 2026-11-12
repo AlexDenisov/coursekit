@@ -1,0 +1,21 @@
+# One crate per exercise. Add each new exercise's directory to `members`.
+# Package names must be unique across the workspace: use the exercise's slug.
+[workspace]
+resolver = "2"
+members = [
+  "common",
+  "example/prefix_sums",
+]
+
+[workspace.package]
+edition = "2021"
+publish = false
+
+[workspace.lints.rust]
+# Stubs ignore their arguments and must still build without noise.
+unused_variables = "allow"
+dead_code = "allow"
+
+[profile.dev]
+# Integer overflow panics in tests (the default for dev); keep it that way.
+overflow-checks = true

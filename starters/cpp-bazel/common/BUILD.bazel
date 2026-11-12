@@ -1,0 +1,26 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+# Shared helpers every exercise may use. Keep them small and obviously correct:
+# tests rely on them, and they must never call the code under test.
+
+cc_library(
+    name = "check",
+    hdrs = ["check.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "rng",
+    hdrs = ["rng.h"],
+    visibility = ["//visibility:public"],
+    deps = [":check"],
+)
+
+cc_test(
+    name = "rng_test",
+    srcs = ["rng_test.cc"],
+    deps = [
+        ":rng",
+        "@googletest//:gtest_main",
+    ],
+)

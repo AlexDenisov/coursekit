@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Course map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* A build graph read left to right (columns = how deep the prerequisites go),
+   one horizontal lane per track or per domain. All data comes from curriculum.js
+   (tools/sync_curriculum.py) and progress.js (tools/progress.py); nothing here is
+   specific to a course. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #16181d;
+  --muted: #5d6470;
+  --line: #d5d9e0;
+  --edge: #a3aab6;
+  --accent: #2448c9;
+  --accent-soft: #e3e9fb;
+  --done: #1d7a46;
+  --done-soft: #ddf1e5;
+  --ready: #b45309;
+  --learn: #8b6fc9;
+  --p1: #3b6fd8; --p2: #2f8f9d; --p3: #2e9b57; --p4: #b8860b;
+  --p5: #a23cc0; --p6: #d4651c; --p7: #1f7fb6; --p8: #cf3b3b; --p9: #55708a; --p10: #2a8a6e;
+  --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-node: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111317; --surface: #1a1d23; --fg: #e8eaee; --muted: #9aa2ae; --line: #2e333c;
+    --edge: #59616e; --accent: #7d9bff; --accent-soft: #232c48; --done: #5cc98a; --done-soft: #183224;
+    --ready: #f0a95a; --learn: #b9a2f0;
+    --p1: #7aa2f7; --p2: #5ec2cf; --p3: #62c98a; --p4: #e0b84a;
+    --p5: #cf86e6; --p6: #f08f50; --p7: #5fb0e6; --p8: #f07373; --p9: #93aec8; --p10: #5fcfaa;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111317; --surface: #1a1d23; --fg: #e8eaee; --muted: #9aa2ae; --line: #2e333c;
+  --edge: #59616e; --accent: #7d9bff; --accent-soft: #232c48; --done: #5cc98a; --done-soft: #183224;
+  --ready: #f0a95a; --learn: #b9a2f0;
+  --p1: #7aa2f7; --p2: #5ec2cf; --p3: #62c98a; --p4: #e0b84a;
+  --p5: #cf86e6; --p6: #f08f50; --p7: #5fb0e6; --p8: #f07373; --p9: #93aec8; --p10: #5fcfaa;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; line-height: 1.5;
+}
+.wrap {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 32px;
+  max-width: 1700px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 16px;
+}
+header { display: flex; flex-direction: column; gap: 4px; }
+h1 { font-size: 22px; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h2 { font-size: 15px; font-weight: 600; margin: 0 0 8px; }
+h3 { font-size: 11px; font-weight: 600; margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.sub { color: var(--muted); margin: 0; max-width: 80ch; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-right: 4px; }
+button.chip {
+  font: 500 13px/1 var(--font-ui); color: var(--fg); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; cursor: pointer;
+}
+button.chip:hover { border-color: var(--accent); }
+button.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+button:focus-visible, input:focus-visible, .node:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.toggle { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); margin-left: 8px; }
+.graph {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  overflow-x: auto; overflow-y: hidden; min-width: 0;
+  cursor: grab; user-select: none; -webkit-user-select: none; touch-action: pan-y;
+}
+.graph.dragging { cursor: grabbing; }
+.graph.dragging .node { cursor: grabbing; }
+/* The graph scales down to fit the available width, but not below a readable size. */
+#graph > svg { display: block; width: 100%; height: auto; min-width: 900px; }
+#graph.zoomed > svg { min-width: 0; }
+#zoom-level { font: 12px/1 var(--font-mono); color: var(--muted); min-width: 3.5em; text-align: center; }
+.lane-bg { fill: var(--bg); }
+.lane-name { font: 600 11px var(--font-ui); letter-spacing: 0.06em; text-transform: uppercase; }
+.col-tick { font: 500 10px var(--font-mono); fill: var(--muted); }
+.edge { fill: none; stroke: var(--edge); stroke-width: 1.2; transition: opacity .15s, stroke .15s; }
+.edge.part { stroke-dasharray: 5 4; }
+.edge.real { stroke-dasharray: 1.5 4; stroke-linecap: round; }
+.edge.learn { stroke: var(--learn); stroke-width: 1.6; }
+.edge.on { stroke: var(--accent); stroke-width: 2; }
+.node { cursor: pointer; transition: opacity .15s; outline: none; }
+.node rect.box { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+.node .num { font: 600 12px var(--font-mono); }
+.node .name { font: 500 13px var(--font-node); fill: var(--fg); }
+.node .lvl { font: 600 10px var(--font-mono); fill: var(--muted); }
+.node:hover rect.box { stroke: var(--accent); }
+.node.done rect.box { fill: var(--done-soft); stroke: var(--done); }
+.node.ready rect.box { stroke: var(--ready); stroke-width: 1.6; stroke-dasharray: 4 3; }
+.node.need rect.box { stroke: var(--accent); stroke-width: 2; }
+.node.target rect.box { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+.node.milestone rect.box { stroke-width: 1.8; }
+.node.planned { opacity: 0.45; }
+.node.planned.dim { opacity: 0.15; }
+.dim { opacity: 0.22; }
+.check { fill: var(--done); font: 700 13px var(--font-ui); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+.legend svg { display: inline-block; vertical-align: middle; margin-right: 4px; }
+code, .mono { font-family: var(--font-mono); font-size: 12px; }
+[hidden] { display: none !important; }
+
+.panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px;
+  display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 8px 32px;
+}
+@media (max-width: 760px) { .panel { grid-template-columns: minmax(0, 1fr); } }
+.panel .meta { color: var(--muted); font-size: 13px; margin: 0; }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.steps li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: start; padding: 5px 6px; border-radius: 7px; }
+.steps li:hover { background: var(--bg); }
+.steps .mark { font: 700 13px var(--font-ui); text-align: center; color: var(--muted); }
+.steps li.is-done .mark { color: var(--done); }
+.steps li.is-ready .mark { color: var(--ready); }
+.steps input { margin: 3px 0 0; accent-color: var(--done); }
+.steps .t { font-weight: 500; }
+.steps .id { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.steps .note { display: block; font-size: 12px; color: var(--muted); }
+.steps a { color: inherit; text-decoration: none; cursor: pointer; }
+.steps a:hover .t { color: var(--accent); text-decoration: underline; }
+.empty { color: var(--muted); font-size: 13px; margin: 0; }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin: 6px 0 2px; }
+.bar > span { display: block; height: 100%; background: var(--done); }
+@media (prefers-reduced-motion: reduce) { .edge, .node { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="title">Course map</h1>
+    <p class="sub">Click an exercise to see everything it needs, in an order you can work through. Green boxes are
+      done; dashed orange outlines mark what you can start right now. Drag the graph or scroll over it to move
+      sideways; zoom with the buttons, Ctrl/⌘ + wheel, a trackpad pinch, or the + − 0 keys. Esc clears the
+      selection.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="View">
+    <span class="label">Lanes</span>
+    <button class="chip" data-lanes="track" aria-pressed="true">By track</button>
+    <button class="chip" data-lanes="domain" aria-pressed="false">By domain</button>
+    <span class="label" style="margin-left:12px">Levels</span>
+    <span class="controls" id="levels"></span>
+    <span class="label" style="margin-left:12px">Show</span>
+    <button class="chip" data-mode="learn" aria-pressed="true">Learning order</button>
+    <button class="chip" data-mode="code" aria-pressed="false">Code dependencies only</button>
+  </div>
+
+  <div class="controls" role="group" aria-label="Shortcuts">
+    <span class="label" id="presets-label">Go to</span>
+    <div class="controls" id="presets"></div>
+    <label class="toggle" id="real-toggle"><input type="checkbox" id="real" checked> include real-data tests</label>
+    <button class="chip" id="clear">Clear selection</button>
+    <span class="label" style="margin-left:12px">Zoom</span>
+    <button class="chip" id="zoom-out" aria-label="Zoom out">−</button>
+    <span id="zoom-level" aria-live="polite">fit</span>
+    <button class="chip" id="zoom-in" aria-label="Zoom in">+</button>
+    <button class="chip" id="zoom-fit" aria-pressed="true">Fit width</button>
+  </div>
+
+  <div class="graph" id="graph"></div>
+
+  <div class="legend">
+    <span><svg width="34" height="8"><line x1="0" y1="4" x2="34" y2="4" stroke="currentColor" stroke-width="1.5"/></svg>tests call that exercise's code</span>
+    <span><svg width="34" height="8"><line x1="0" y1="4" x2="34" y2="4" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4"/></svg>only one function, or an optional part</span>
+    <span id="real-legend"><svg width="34" height="8"><line x1="0" y1="4" x2="34" y2="4" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1.5 4" stroke-linecap="round"/></svg>needed only for a real-data test or bench</span>
+    <span id="learn-legend"><svg width="34" height="8"><line x1="0" y1="4" x2="34" y2="4" stroke="var(--learn)" stroke-width="1.8"/></svg>understand this first (learning order)</span>
+    <span>★ milestone</span>
+    <span id="planned-legend" hidden><span style="opacity:.45">faded</span>: planned, not written yet</span>
+    <span id="level-legend"></span>
+  </div>
+
+  <section class="panel" id="panel" aria-live="polite">
+    <div id="panel-main"></div>
+    <div id="panel-side"></div>
+  </section>
+</div>
+
+<!-- curriculum.js: written by tools/sync_curriculum.py from curriculum.json.
+     progress.js: written by tools/progress.py from your test results; missing until you run it.
+     The timestamp keeps the browser from reusing a stale copy. -->
+<script>
+  document.write('<script src="curriculum.js?t=' + Date.now() + '"><\/script>');
+  document.write('<script src="progress.js?t=' + Date.now() + '"><\/script>');
+</script>
+<script>
+const C = window.CURRICULUM;
+if (!C) {
+  document.getElementById("graph").innerHTML =
+    '<p style="padding:16px">No <code>curriculum.js</code> next to this page. Run <code>python3 tools/sync_curriculum.py</code>.</p>';
+  throw new Error("curriculum.js missing");
+}
+const title = C.title || "Course map";
+document.title = `${title} · map`;
+document.getElementById("title").textContent = title;
+
+const LEVELS = C.levels.map((l) => l.id);
+const LRANK = Object.fromEntries(LEVELS.map((l, i) => [l, i]));
+const LEVEL = Object.fromEntries(C.levels.map((l) => [l.id, l]));
+const TRACK = Object.fromEntries(C.tracks.map((t) => [t.id, t]));
+const EX = Object.fromEntries(C.exercises.map((e) => [e.id, e]));
+const EDGES = C.edges.map(([from, to, kind, note]) => ({ from, to, kind, note }));
+const PRESETS = C.presets || [];
+const domainOf = (id) => id.split("/")[0];
+const trackOf = (id) => EX[id].tracks[0];  // main track: the first one listed
+const colorOf = (id) => `var(${TRACK[trackOf(id)].color})`;
+// A domain lane takes the colour of the track most of its exercises belong to.
+const DOMAIN_COLOR = {};
+for (const d of C.domains) {
+  const n = {};
+  C.exercises.filter((e) => domainOf(e.id) === d.id).forEach((e) => { n[trackOf(e.id)] = (n[trackOf(e.id)] || 0) + 1; });
+  const top = Object.entries(n).sort((a, b) => b[1] - a[1])[0];
+  DOMAIN_COLOR[d.id] = top ? `var(${TRACK[top[0]].color})` : "var(--muted)";
+}
+const LETTER = (l) => LEVEL[l].name[0].toUpperCase();
+const hasReal = EDGES.some((e) => e.kind === "real");
+document.getElementById("real-toggle").hidden = !hasReal;
+document.getElementById("real-legend").hidden = !hasReal;
+document.getElementById("presets-label").hidden = !PRESETS.length;
+document.getElementById("level-legend").innerHTML =
+  C.levels.map((l) => `<b>${LETTER(l.id)}</b>`).join(" / ") + " " + C.levels.map((l) => l.name.toLowerCase()).join(", ");
+
+// ---------- state (localStorage: per viewer conveniences only; every access may throw)
+const STORE = "course-map:" + title;
+let state = { targets: [], real: true, preset: -1, mode: "learn", lanes: "track",
+              maxLevel: LEVELS.length - 1, zoom: null, ticks: [] };
+try {
+  const s = JSON.parse(localStorage.getItem(STORE) || "null");
+  if (s && typeof s === "object") state = { ...state, ...s };
+} catch (e) {}
+const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} };
+
+// Done exercises come from progress.js (tools/progress.py runs the tests). Without it,
+// you tick exercises by hand in the panel below the graph.
+const PROGRESS = window.PROGRESS || null;
+let DONE = new Set(PROGRESS ? PROGRESS.done : state.ticks);
+const isDone = (id) => DONE.has(id);
+const PARTIAL = (PROGRESS && PROGRESS.partial) || {};
+// Exercises that exist in the repo; until progress.py has run, treat all as written.
+const WRITTEN = PROGRESS && PROGRESS.written ? new Set(PROGRESS.written) : null;
+const isWritten = (id) => !WRITTEN || WRITTEN.has(id);
+document.getElementById("planned-legend").hidden = !WRITTEN;
+function toggleTick(id, on) {
+  if (PROGRESS) return;
+  const s = new Set(state.ticks);
+  on ? s.add(id) : s.delete(id);
+  state.ticks = [...s]; DONE = s; save(); render();
+}
+
+// ---------- the visible graph (level filter)
+let ids = [], incoming = {}, outgoing = {};
+function computeVisible() {
+  ids = C.exercises.map((e) => e.id).filter((id) => LRANK[EX[id].level] <= state.maxLevel);
+  const vis = new Set(ids);
+  state.targets = state.targets.filter((t) => vis.has(t));
+  incoming = Object.fromEntries(ids.map((i) => [i, []]));
+  outgoing = Object.fromEntries(ids.map((i) => [i, []]));
+  for (const e of EDGES) {
+    if (!vis.has(e.from) || !vis.has(e.to)) continue;
+    incoming[e.to].push(e);
+    outgoing[e.from].push(e);
+  }
+}
+
+// ---------- planning
+const counts = (e) => e.kind !== "learn" || state.mode === "learn";
+// Everything the targets need (targets included): Map id -> {full, notes[]}. `full` is false
+// when only one function / an optional part is needed (a `part` edge).
+function plan(targets, real) {
+  const need = new Map();
+  const ideas = new Map();
+  const visit = (id, full, note) => {
+    let e = need.get(id);
+    if (!e) { e = { full: false, notes: [] }; need.set(id, e); }
+    if (note && !e.notes.includes(note)) e.notes.push(note);
+    if (!full || e.full) return;
+    e.full = true;
+    for (const ed of incoming[id]) {
+      if (ed.kind === "req") visit(ed.from, true, ed.note);
+      else if (ed.kind === "real") { if (real) visit(ed.from, true, ed.note); }
+      else if (ed.kind === "part") visit(ed.from, false, ed.note || "only part of it");
+      else if (ed.kind === "learn") { if (state.mode === "learn") visit(ed.from, true, ed.note); }
+      else if (ed.kind === "idea") ideas.set(ed.from, ed.note);
+    }
+  };
+  targets.forEach((t) => visit(t, true));
+  for (const k of need.keys()) ideas.delete(k);
+  return { need, ideas };
+}
+function depthOf() {
+  const d = {};
+  const f = (id) => {
+    if (d[id] !== undefined) return d[id];
+    let m = 0;
+    for (const e of incoming[id]) if (e.kind !== "part" && e.kind !== "idea" && counts(e)) m = Math.max(m, f(e.from) + 1);
+    return (d[id] = m);
+  };
+  ids.forEach(f);
+  return d;
+}
+let DEPTH = {};
+const order = (a, b) => DEPTH[a] - DEPTH[b] || LRANK[EX[a].level] - LRANK[EX[b].level] || a.localeCompare(b);
+function readyNow() {
+  return ids.filter((id) => isWritten(id) && !isDone(id) && incoming[id].every((e) =>
+    e.kind === "idea" || !counts(e) || (e.kind === "real" && !state.real) || isDone(e.from)));
+}
+// A workable order for a set of exercises: prerequisites first (every counted edge, `part` included).
+function workable(set) {
+  const list = [...set].sort(order);
+  const indeg = Object.fromEntries(list.map((i) => [i, 0]));
+  const usable = (e) => set.has(e.from) && set.has(e.to) && e.kind !== "idea" && counts(e) && (e.kind !== "real" || state.real);
+  for (const i of list) for (const e of incoming[i]) if (usable(e)) indeg[i]++;
+  const out = [], queue = list.filter((i) => indeg[i] === 0);
+  while (queue.length) {
+    queue.sort(order);
+    const u = queue.shift();
+    out.push(u);
+    for (const e of outgoing[u]) if (usable(e) && --indeg[e.to] === 0) queue.push(e.to);
+  }
+  return out;
+}
+
+// ---------- layout (recomputed when the view changes)
+const NW = 152, NH = 46, COLW = 176, ROWH = 58, LANE_PAD = 14, LEFT = 170, TOP = 26;
+let pos = {}, lanes = [], svgW = 0, svgH = 0;
+function laneList() {
+  return state.lanes === "track"
+    ? C.tracks.map((t) => ({ key: t.id, name: t.name, color: `var(${t.color})`, of: (id) => trackOf(id) === t.id }))
+    : C.domains.map((d) => ({ key: d.id, name: d.name, color: DOMAIN_COLOR[d.id], of: (id) => domainOf(id) === d.id }));
+}
+function layout() {
+  DEPTH = depthOf();
+  pos = {}; lanes = [];
+  let y = TOP;
+  for (const lane of laneList()) {
+    const inLane = ids.filter(lane.of);
+    if (!inLane.length) continue;
+    const cells = {};
+    inLane.sort(order).forEach((i) => { (cells[DEPTH[i]] ||= []).push(i); });
+    const rows = Math.max(...Object.values(cells).map((c) => c.length));
+    const h = rows * ROWH + LANE_PAD * 2 - (ROWH - NH);
+    for (const [col, list] of Object.entries(cells))
+      list.forEach((i, r) => { pos[i] = { x: LEFT + col * COLW, y: y + LANE_PAD + r * ROWH }; });
+    lanes.push({ ...lane, y, h });
+    y += h + 8;
+  }
+  svgH = y + 4;
+  svgW = LEFT + (Math.max(0, ...Object.values(DEPTH)) + 1) * COLW;
+}
+
+// ---------- rendering
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}, parent) => {
+  const n = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  if (parent) parent.appendChild(n);
+  return n;
+};
+const svg = el("svg", { role: "img", "aria-label": "Dependency graph of the exercises" });
+const graphEl = document.getElementById("graph");
+graphEl.appendChild(svg);
+
+// Shorten an SVG text element with an ellipsis until it fits `max` px.
+function fit(t, max) {
+  if (t.getComputedTextLength() <= max) return;
+  let s = t.textContent;
+  while (s.length > 1 && t.getComputedTextLength() > max) { s = s.slice(0, -1); t.textContent = s.trimEnd() + "…"; }
+}
+
+// Drag to pan. A press that moves less than a few pixels still counts as a click on a node.
+(function dragToPan() {
+  let start = null, moved = false;
+  graphEl.addEventListener("pointerdown", (ev) => {
+    if (ev.button !== 0 || ev.pointerType === "touch") return;  // touch scrolls natively
+    start = { x: ev.clientX, y: ev.clientY, left: graphEl.scrollLeft, top: window.scrollY };
+    moved = false;
+  });
+  window.addEventListener("pointermove", (ev) => {
+    if (!start) return;
+    const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
+    if (!moved && Math.hypot(dx, dy) < 5) return;
+    if (!moved) { moved = true; graphEl.classList.add("dragging"); }
+    graphEl.scrollLeft = start.left - dx;
+    window.scrollTo(window.scrollX, start.top - dy);
+  });
+  window.addEventListener("pointerup", () => {
+    if (!start) return;
+    start = null;
+    graphEl.classList.remove("dragging");
+  });
+  // Swallow the click that ends a drag, so dragging across a node doesn't select it.
+  graphEl.addEventListener("click", (ev) => {
+    if (moved) { ev.stopPropagation(); ev.preventDefault(); moved = false; }
+  }, true);
+})();
+
+// A vertical mouse wheel over the graph scrolls it sideways until it reaches either end;
+// then the page scrolls as usual. Trackpad sideways swipes and Shift+wheel work natively.
+graphEl.addEventListener("wheel", (ev) => {
+  if (ev.ctrlKey || ev.metaKey || Math.abs(ev.deltaX) > Math.abs(ev.deltaY)) return;
+  const max = graphEl.scrollWidth - graphEl.clientWidth;
+  if (max <= 0) return;
+  const atStart = graphEl.scrollLeft <= 0 && ev.deltaY < 0;
+  const atEnd = graphEl.scrollLeft >= max - 1 && ev.deltaY > 0;
+  if (atStart || atEnd) return;
+  ev.preventDefault();
+  graphEl.scrollLeft += ev.deltaY;
+}, { passive: false });
+
+// ---------- zoom. state.zoom: null = fit the width (never below a readable size),
+// otherwise SVG units -> CSS pixels.
+const ZMIN = 0.3, ZMAX = 3;
+function currentScale() {
+  if (state.zoom != null) return state.zoom;
+  const w = svg.getBoundingClientRect().width;
+  return w > 0 && svgW > 0 ? w / svgW : 1;
+}
+function applyZoom() {
+  const z = state.zoom;
+  graphEl.classList.toggle("zoomed", z != null);
+  svg.style.width = z == null ? "" : `${Math.round(svgW * z)}px`;
+  document.getElementById("zoom-level").textContent = z == null ? "fit" : `${Math.round(z * 100)}%`;
+  document.getElementById("zoom-fit").setAttribute("aria-pressed", String(z == null));
+}
+// Zoom by `factor`, keeping the graph point under (cx, cy) in place (default: centre of view).
+function zoomBy(factor, cx, cy) {
+  const before = svg.getBoundingClientRect();
+  const gr = graphEl.getBoundingClientRect();
+  if (cx == null) { cx = gr.left + gr.width / 2; cy = Math.max(gr.top, 0) + Math.min(gr.height, innerHeight) / 2; }
+  const fx = before.width ? (cx - before.left) / before.width : 0;
+  const fy = before.height ? (cy - before.top) / before.height : 0;
+  state.zoom = Math.min(ZMAX, Math.max(ZMIN, currentScale() * factor));
+  applyZoom();
+  const after = svg.getBoundingClientRect();
+  graphEl.scrollLeft += after.left + fx * after.width - cx;
+  window.scrollBy(0, after.top + fy * after.height - cy);
+  save();
+}
+document.getElementById("zoom-in").addEventListener("click", () => zoomBy(1.25));
+document.getElementById("zoom-out").addEventListener("click", () => zoomBy(0.8));
+document.getElementById("zoom-fit").addEventListener("click", () => { state.zoom = null; applyZoom(); save(); });
+// Ctrl/⌘ + wheel, and trackpad pinch (which browsers report as a wheel event with ctrlKey).
+graphEl.addEventListener("wheel", (ev) => {
+  if (!ev.ctrlKey && !ev.metaKey) return;
+  ev.preventDefault();
+  zoomBy(Math.exp(-ev.deltaY * 0.01), ev.clientX, ev.clientY);
+}, { passive: false });
+document.addEventListener("keydown", (ev) => {
+  if (ev.target.closest && ev.target.closest("input, textarea") || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  if (ev.key === "+" || ev.key === "=") zoomBy(1.25);
+  else if (ev.key === "-") zoomBy(0.8);
+  else if (ev.key === "0") { state.zoom = null; applyZoom(); save(); }
+  else if (ev.key === "Escape" && state.targets.length) select([]);
+});
+
+let edgeEls = [], nodeEls = {};
+function build() {
+  computeVisible();
+  layout();
+  svg.replaceChildren();
+  svg.setAttribute("viewBox", `0 0 ${svgW} ${svgH}`);
+  for (const l of lanes) {
+    el("rect", { x: 0, y: l.y, width: svgW, height: l.h, class: "lane-bg" }, svg);
+    const t = el("text", { x: 12, y: l.y + 18, class: "lane-name", fill: l.color }, svg);
+    t.textContent = l.name;
+    fit(t, LEFT - 20);
+  }
+  for (let c = 0; c <= Math.max(0, ...Object.values(DEPTH)); c++) {
+    const t = el("text", { x: LEFT + c * COLW + NW / 2, y: 16, class: "col-tick", "text-anchor": "middle" }, svg);
+    t.textContent = c === 0 ? "start here" : `step ${c}`;
+  }
+
+  edgeEls = [];
+  const edgeLayer = el("g", {}, svg);
+  for (const e of ids.flatMap((i) => incoming[i]).filter((e) => counts(e) && e.kind !== "idea")) {
+    const a = pos[e.from], b = pos[e.to];
+    let d;
+    if (b.x > a.x + NW) {
+      const x1 = a.x + NW, y1 = a.y + NH / 2, x2 = b.x, y2 = b.y + NH / 2, k = Math.max(30, (x2 - x1) / 2);
+      d = `M${x1},${y1} C${x1 + k},${y1} ${x2 - k},${y2} ${x2},${y2}`;
+    } else {
+      const down = b.y > a.y;
+      const x1 = a.x + NW / 2 + 10, y1 = down ? a.y + NH : a.y, x2 = b.x + NW / 2 - 10, y2 = down ? b.y : b.y + NH;
+      const k = Math.max(30, Math.abs(y2 - y1) / 2) * (down ? 1 : -1);
+      d = `M${x1},${y1} C${x1},${y1 + k} ${x2},${y2 - k} ${x2},${y2}`;
+    }
+    const path = el("path", { d, class: `edge ${e.kind}` }, edgeLayer);
+    el("title", {}, path).textContent = `${e.from} → ${e.to}${e.note ? ": " + e.note : ""}`;
+    edgeEls.push({ e, path });
+  }
+
+  nodeEls = {};
+  const nodeLayer = el("g", {}, svg);
+  for (const id of ids) {
+    const ex = EX[id];
+    const { x, y } = pos[id];
+    const g = el("g", { class: `node${ex.milestone ? " milestone" : ""}${isWritten(id) ? "" : " planned"}`, transform: `translate(${x},${y})`,
+      tabindex: 0, role: "button", "aria-label": `${id}: ${ex.title}` }, nodeLayer);
+    el("title", {}, g).textContent = `${id}\n${ex.title}${ex.about ? "\n" + ex.about : ""}`;
+    el("rect", { class: "box", width: NW, height: NH, rx: 7 }, g);
+    // Top line: the axis the lanes don't show (domain in track lanes, track in domain lanes).
+    const sub = state.lanes === "track" ? domainOf(id) : TRACK[trackOf(id)].name;
+    const top = el("text", { x: 10, y: 18, class: "num", fill: colorOf(id) }, g);
+    top.textContent = sub + (ex.given ? " · given" : "");
+    const lvl = el("text", { x: NW - 10, y: 18, class: "lvl", "text-anchor": "end" }, g);
+    lvl.textContent = LETTER(ex.level);
+    const nm = el("text", { x: 10, y: 36, class: "name" }, g);
+    nm.textContent = (ex.milestone ? "★ " : "") + ex.title;
+    const ck = el("text", { x: NW - 30, y: 18, class: "check" }, g);
+    ck.textContent = "✓";
+    g.addEventListener("click", () => select([id]));
+    g.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select([id]); } });
+    nodeEls[id] = { g, ck, top, nm };
+  }
+  // Text widths are only known once the SVG is in the page.
+  for (const { top, nm } of Object.values(nodeEls)) { fit(top, NW - 46); fit(nm, NW - 18); }
+}
+function rebuild() { build(); applyZoom(); render(); }
+
+// ---------- view switches
+function setMode(mode) {
+  state.mode = mode;
+  document.querySelectorAll("[data-mode]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  document.getElementById("learn-legend").hidden = mode !== "learn";
+}
+document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => { setMode(b.dataset.mode); save(); rebuild(); }));
+function setLanes(lanes) {
+  state.lanes = lanes;
+  document.querySelectorAll("[data-lanes]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lanes === lanes)));
+}
+document.querySelectorAll("[data-lanes]").forEach((b) => b.addEventListener("click", () => { setLanes(b.dataset.lanes); save(); rebuild(); }));
+// Level filter: "up to" a level. The level rule (no exercise depends on a harder one) keeps
+// every filtered graph complete.
+const levelsEl = document.getElementById("levels");
+function setMaxLevel(i) {
+  state.maxLevel = i;
+  levelsEl.querySelectorAll("button").forEach((b, j) => b.setAttribute("aria-pressed", String(j === i)));
+}
+C.levels.forEach((lvl, i) => {
+  const b = document.createElement("button");
+  b.className = "chip";
+  b.textContent = i === 0 ? lvl.name : i === LEVELS.length - 1 ? "All" : `Up to ${lvl.name.toLowerCase()}`;
+  b.title = C.levels.slice(0, i + 1).map((l) => `${l.name}: ${l.meaning || ""}`).join("\n");
+  b.addEventListener("click", () => { setMaxLevel(i); save(); rebuild(); });
+  levelsEl.appendChild(b);
+});
+
+const presetsEl = document.getElementById("presets");
+PRESETS.forEach((p, i) => {
+  const b = document.createElement("button");
+  b.className = "chip"; b.textContent = p.label; b.id = `preset-${i}`;
+  b.addEventListener("click", () => {
+    if (p.real !== undefined) { state.real = p.real; document.getElementById("real").checked = p.real; }
+    let rebuilt = false;
+    if (p.mode && p.mode !== state.mode) { setMode(p.mode); rebuilt = true; }
+    if (p.level) { setMaxLevel(Math.max(state.maxLevel, LRANK[p.level])); rebuilt = true; }
+    if (rebuilt) { build(); applyZoom(); }
+    const targets = p.targets || (p.level ? ids.filter((id) => EX[id].level === p.level) : []);
+    select(targets, i);
+  });
+  presetsEl.appendChild(b);
+});
+document.getElementById("real").checked = state.real;
+document.getElementById("real").addEventListener("change", (e) => { state.real = e.target.checked; save(); render(); });
+document.getElementById("clear").addEventListener("click", () => select([]));
+// A click on empty graph space (not the end of a drag; that click is swallowed above) clears.
+graphEl.addEventListener("click", (ev) => { if (!ev.target.closest(".node") && state.targets.length) select([]); });
+
+function select(targets, preset = -1) {
+  state.targets = targets; state.preset = preset; save(); render();
+}
+
+// ---------- the panel under the graph
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function row(id, { notes = [], ready = false } = {}) {
+  const ex = EX[id];
+  const done = isDone(id);
+  const p = PARTIAL[id];
+  const extra = [...notes];
+  if (!isWritten(id)) extra.push("planned, not written yet");
+  if (ex.given) extra.push("given: read it, don't write it");
+  if (p && p[1]) extra.push(`in progress: ${p[0]}/${p[1]} tests pass`);
+  else if (p) extra.push("in progress");
+  const mark = PROGRESS
+    ? `<span class="mark" aria-hidden="true">${done ? "✓" : ready ? "→" : "·"}</span>`
+    : `<input type="checkbox" data-tick="${esc(id)}" ${done ? "checked" : ""} aria-label="Mark ${esc(ex.title)} done">`;
+  return `<li class="${done ? "is-done" : ready ? "is-ready" : ""}">${mark}<a data-go="${esc(id)}">
+    <span class="t">${ex.milestone ? "★ " : ""}${esc(ex.title)}</span> <span class="id">${esc(id)} · ${LETTER(ex.level)}</span>
+    ${ex.about ? `<span class="note">${esc(ex.about)}</span>` : ""}
+    ${extra.length ? `<span class="note">${esc(extra.join("; "))}</span>` : ""}</a></li>`;
+}
+function list(items, empty) {
+  return items.length ? `<ul class="steps">${items.join("")}</ul>` : `<p class="empty">${empty}</p>`;
+}
+function sourceLine() {
+  return PROGRESS
+    ? `From your test results (<code>tools/progress.py</code>, ${esc(PROGRESS.updated || "")}).`
+    : `No <code>progress.js</code> yet: tick exercises by hand, or run <code>python3 tools/progress.py</code>.`;
+}
+function renderPanel(need, ideas, ready) {
+  const main = document.getElementById("panel-main"), side = document.getElementById("panel-side");
+  const visibleWritten = ids.filter(isWritten);
+  const nDone = visibleWritten.filter(isDone).length;
+  if (!state.targets.length) {
+    const pct = visibleWritten.length ? Math.round(100 * nDone / visibleWritten.length) : 0;
+    main.innerHTML = `<h2>Start here</h2>
+      <p class="meta">${nDone} of ${visibleWritten.length} exercises done. ${sourceLine()}</p>
+      <div class="bar"><span style="width:${pct}%"></span></div>
+      <h3>Ready now</h3>${list([...ready].sort(order).map((i) => row(i, { ready: true })), "Nothing: every written exercise is done.")}`;
+    side.innerHTML = `<h3>Tracks</h3>${list(C.tracks.map((t) => {
+      const mine = ids.filter((i) => trackOf(i) === t.id), written = mine.filter(isWritten);
+      const planned = mine.length - written.length;
+      return `<li><span class="mark" style="color:var(${t.color})">●</span><span><span class="t">${esc(t.name)}</span>
+        <span class="id">${written.filter(isDone).length}/${written.length} done${planned ? ` · ${planned} planned` : ""}</span><span class="note">${esc(t.goal || "")}</span></span></li>`;
+    }), "No tracks.")}`;
+  } else {
+    const steps = workable(new Set(need.keys()));
+    const left = steps.filter((i) => !isDone(i)).length;
+    const names = state.targets.map((t) => EX[t].title).join(", ");
+    main.innerHTML = `<h2>${esc(state.targets.length === 1 ? names : `${state.targets.length} targets`)}</h2>
+      <p class="meta">${steps.length} exercise${steps.length === 1 ? "" : "s"} in a workable order, ${left} left.
+        ${state.mode === "learn" ? "Learning order: includes what to understand first." : "Code dependencies only: the shortest path to passing tests."}</p>
+      <h3>Plan</h3>${list(steps.map((i) => row(i, { notes: need.get(i).notes, ready: ready.has(i) })), "")}`;
+    const opens = [...new Set(state.targets.flatMap((t) => outgoing[t].filter((e) => e.kind !== "idea").map((e) => e.to)))]
+      .filter((i) => !need.has(i)).sort(order);
+    side.innerHTML = `<h3>Helpful background</h3>${list([...ideas].map(([i, n]) => row(i, { notes: n ? [n] : [] })), "None listed.")}
+      <h3>Opens up</h3>${list(opens.map((i) => row(i)), "Nothing depends on it yet.")}`;
+  }
+  for (const a of document.querySelectorAll("#panel [data-go]")) a.addEventListener("click", () => select([a.dataset.go]));
+  for (const c of document.querySelectorAll("#panel [data-tick]")) c.addEventListener("change", () => toggleTick(c.dataset.tick, c.checked));
+}
+
+function render() {
+  const has = state.targets.length > 0;
+  const { need, ideas } = plan(state.targets, state.real);
+  const ready = new Set(readyNow());
+  for (const id of ids) {
+    const { g, ck } = nodeEls[id];
+    g.classList.toggle("done", isDone(id));
+    g.classList.toggle("planned", !isWritten(id));
+    g.classList.toggle("ready", ready.has(id));
+    g.classList.toggle("target", state.targets.includes(id));
+    g.classList.toggle("need", has && need.has(id) && !state.targets.includes(id));
+    g.classList.toggle("dim", has && !need.has(id) && !ideas.has(id));
+    ck.style.display = isDone(id) ? "" : "none";
+  }
+  for (const { e, path } of edgeEls) {
+    const active = has && need.has(e.to) && need.get(e.to).full && need.has(e.from) && (e.kind !== "real" || state.real);
+    path.classList.toggle("on", active);
+    path.classList.toggle("dim", has && !active);
+  }
+  PRESETS.forEach((_, i) => document.getElementById(`preset-${i}`).setAttribute("aria-pressed", String(state.preset === i)));
+  renderPanel(need, ideas, ready);
+}
+
+setMode(state.mode);
+setLanes(state.lanes);
+setMaxLevel(Math.min(state.maxLevel, LEVELS.length - 1));
+rebuild();
+// Webfonts change text widths: redo the ellipses once they're in.
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(rebuild);
+</script>
+</body>
+</html>

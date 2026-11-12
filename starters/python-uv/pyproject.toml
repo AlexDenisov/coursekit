@@ -1,0 +1,31 @@
+[project]
+name = "course"  # rename to your course
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-timeout>=2", "ruff>=0.6"]
+
+[tool.uv]
+package = false  # a course, not a library: exercises are imported from the repo root
+
+[tool.pytest.ini_options]
+python_files = ["*_test.py"]
+# importlib: test files in different exercises may share a name (optional_test.py).
+addopts = "--import-mode=importlib -p no:cacheprovider"
+pythonpath = ["."]
+# Stubs must fail fast, never hang.
+timeout = 30
+markers = [
+  "optional: tests for the optional part of an exercise",
+  "real: slow tests on real data; skipped when the data isn't downloaded",
+]
+
+[tool.ruff]
+line-length = 100
+# The template's own tooling, not course code.
+extend-exclude = ["tools/progress.py", "tools/sync_curriculum.py", "tools/runners"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

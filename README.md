@@ -28,7 +28,7 @@ across six tracks. Each track ends in a ★ milestone: a server that
 `redis-cli` and `redis-benchmark` talk to unchanged, checked against replies
 recorded from real Redis.
 
-- **[Open the interactive map](https://alexdenisov.github.io/coursekit/redis/)**:
+- **[Open the interactive map](https://lowlevelbits.org/coursekit/redis/)**:
   click an exercise to see what it needs.
 - **[Browse the course](https://github.com/AlexDenisov/coursekit/tree/redis)**
   on the `redis` branch: its README, `curriculum.json`, and the exercises.
@@ -36,7 +36,7 @@ recorded from real Redis.
   on the `redis-solutions` branch (spoilers): what `verify.sh` checks every
   exercise against.
 
-[![The map of a course on building Redis: exercises in lanes by track, from protocol and event loop to keyspace, internals, durability and messaging, with milestones marked ★](redis-roadmap.png)](https://alexdenisov.github.io/coursekit/redis/)
+[![The map of a course on building Redis: exercises in lanes by track, from protocol and event loop to keyspace, internals, durability and messaging, with milestones marked ★](redis-roadmap.png)](https://lowlevelbits.org/coursekit/redis/)
 
 ## What's in the template
 

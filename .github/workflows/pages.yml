@@ -1,5 +1,5 @@
 # Publishes the example courses' maps to GitHub Pages:
-#   https://alexdenisov.github.io/coursekit/<example>/
+#   https://lowlevelbits.org/coursekit/<example>/  (GitHub Pages, custom domain)
 # Each map is the template's current docs/map.html with that course's
 # docs/curriculum.js. Runs on pushes to main; after updating an example branch,
 # run it by hand (Actions → Pages → Run workflow).

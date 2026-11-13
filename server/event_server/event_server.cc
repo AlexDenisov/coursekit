@@ -36,7 +36,7 @@ void EventServer::flush_all() {
 }
 
 void EventServer::close_client(int fd) {
-  // TODO(you): loop_.remove(fd, both), then erase from clients_.
+  // TODO(you): loop_.remove(fd, both), the close hook, then erase from clients_.
 }
 
 }  // namespace rd

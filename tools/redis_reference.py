@@ -54,7 +54,8 @@ def start_server():
     workdir = tempfile.mkdtemp(prefix="redis-oracle-")
     proc = subprocess.Popen(
         ["redis-server", "--port", str(port), "--bind", "127.0.0.1", "--save", "",
-         "--appendonly", "no", "--dir", workdir, "--loglevel", "warning"],
+         "--appendonly", "no", "--dir", workdir, "--loglevel", "warning",
+         "--rdbcompression", "no"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     for _ in range(100):
         try:

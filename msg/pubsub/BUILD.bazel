@@ -1,0 +1,23 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "pubsub",
+    srcs = ["pubsub.cc"],
+    hdrs = ["pubsub.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//db/glob",
+        "//resp/encoder",
+    ],
+)
+
+cc_test(
+    name = "pubsub_test",
+    size = "small",
+    srcs = ["pubsub_test.cc"],
+    deps = [
+        ":pubsub",
+        "@googletest//:gtest_main",
+    ],
+)

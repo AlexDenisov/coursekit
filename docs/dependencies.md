@@ -86,7 +86,6 @@ flowchart LR
   n7 ==>|same wiring, now non-blocking| n13
   n14 --> n15
   n14 --> n16
-  n3 -->|the string commands move onto your dict| n16
   n16 --> n17
   n16 --> n18
   n16 --> n19
@@ -94,9 +93,7 @@ flowchart LR
   n16 --> n20
   n14 --> n20
   n16 --> n21
-  n4 -->|KEYS and SCAN MATCH| n21
   n15 --> n21
-  n17 -.->|only for RENAME keeps the TTL| n21
   n13 --> n22
   n17 -->|active expiry runs as a time event| n22
   n18 --> n22
@@ -108,19 +105,13 @@ flowchart LR
   n16 --> n24
   n25 -->|small integer sets| n27
   n26 --> n27
-  n18 --> n27
-  n19 --> n27
-  n20 --> n27
-  n24 --> n27
   n16 --> n28
   n17 -->|volatile-* policies| n28
   n22 --> n29
   n24 --> n29
-  n27 --> n29
   n28 --> n29
   n6 --> n30
   n16 --> n30
-  n17 --> n30
   n18 --> n30
   n19 --> n30
   n20 --> n30
@@ -132,10 +123,7 @@ flowchart LR
   n2 --> n33
   n16 --> n33
   n33 --> n34
-  n32 -->|the same fork machinery| n34
-  n35 --> n36
   n31 -->|full sync loads an RDB| n36
-  n13 --> n36
   n22 --> n37
   n32 --> n37
   n31 --> n37
@@ -152,10 +140,46 @@ flowchart LR
   n38 --> n41
   n39 --> n41
   n40 --> n41
+  n9 -->|read_available / write_available| n12
+  n3 ==>|port your string commands; no code shared| n16
+  n1 -.->|only parse_int64| n16
+  n0 --> n16
+  n2 --> n16
+  n1 -.->|only parse_int64: which strings are stored as integers| n26
+  n14 --> n27
+  n23 -.->|only the optional CompactZSet| n27
+  n19 ==>|what a CompactHash would replace| n27
+  n20 ==> n27
+  n27 ==>|standalone; wiring it in is a follow-up| n29
+  n24 --> n30
+  n17 ==>|TTLs come from the keyspace| n30
+  n26 -->|Redis 8 stores small values as listpacks| n31
+  n25 -->|small integer sets| n31
+  n18 --> n31
+  n19 --> n31
+  n20 --> n31
+  n24 --> n31
+  n6 --> n31
+  n17 -->|the tests replay TTLs| n33
+  n18 -->|the tests replay lists| n33
+  n32 ==>|the same fork machinery| n34
+  n11 -->|reap the child from a timer| n34
+  n18 --> n34
+  n19 --> n34
+  n20 --> n34
+  n24 --> n34
+  n35 ==>|the primary's side of PSYNC| n36
+  n13 ==>|the same non-blocking machinery| n36
+  n11 --> n36
+  n9 --> n36
+  n1 -->|the replication stream is RESP| n36
+  n33 --> n37
+  n21 -->|the tests use RENAME and FLUSHALL| n39
+  n4 -->|KEYS and SCAN MATCH| n21
 ```
 
 ## Helpful background (not drawn)
 
 | For | Read first | Why |
 |---|---|---|
-| `persist/rdb_writer` | `db/zsets` | sorted sets in RDB are an optional section |
+| `db/generic` | `db/expire` | SET ... PX from db/keyspace is enough for the tests |

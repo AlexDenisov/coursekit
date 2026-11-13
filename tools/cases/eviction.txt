@@ -1,0 +1,8 @@
+# db/eviction: the error a write gets when memory is full and nothing may be evicted.
+## oom
+CONFIG SET maxmemory-policy noeviction
+CONFIG SET maxmemory 1
+SET k v
+GET k
+DEL k
+CONFIG SET maxmemory 0

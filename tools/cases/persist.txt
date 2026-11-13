@@ -1,0 +1,12 @@
+# persist: replies of the save commands (timing-dependent parts left out).
+## save
+SET k v
+SAVE
+BGSAVE
+BGSAVE
+SAVE
+## rewrite while a save runs is scheduled
+BGSAVE
+BGREWRITEAOF
+## rewrite alone starts
+BGREWRITEAOF

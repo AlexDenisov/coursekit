@@ -1,0 +1,52 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
+cc_library(
+    name = "lean_redis_lib",
+    srcs = ["lean_redis.cc"],
+    hdrs = ["lean_redis.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:clock",
+        "//common:rng",
+        "//db/eviction",
+        "//db/zsets",
+        "//resp/encoder",
+        "//resp/parser",
+        "//server/mini_redis:mini_redis_lib",
+    ],
+)
+
+cc_binary(
+    name = "lean_redis",
+    srcs = ["main.cc"],
+    deps = [":lean_redis_lib"],
+)
+
+cc_test(
+    name = "lean_redis_test",
+    size = "medium",
+    srcs = [
+        "compat_cases.inc",
+        "lean_redis_test.cc",
+    ],
+    deps = [
+        ":lean_redis_lib",
+        "//common:test_client",
+        "//common:transcript",
+        "@googletest//:gtest_main",
+    ],
+)
+
+# redis-benchmark against your server and against a real redis-server, side by side.
+# Skips if Redis isn't installed.
+#   bazel test -c opt //server/lean_redis:versus_redis_test --test_output=all
+cc_test(
+    name = "versus_redis_test",
+    size = "large",
+    srcs = ["versus_redis_test.cc"],
+    tags = ["manual"],
+    deps = [
+        ":lean_redis_lib",
+        "@googletest//:gtest_main",
+    ],
+)

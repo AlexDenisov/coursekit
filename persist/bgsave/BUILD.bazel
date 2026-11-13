@@ -1,0 +1,27 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "bgsave",
+    srcs = ["bgsave.cc"],
+    hdrs = ["bgsave.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//db/keyspace",
+        "//net/event_loop",
+        "//persist/rdb_writer",
+        "//resp/encoder",
+    ],
+)
+
+cc_test(
+    name = "bgsave_test",
+    size = "small",
+    srcs = ["bgsave_test.cc"],
+    deps = [
+        ":bgsave",
+        "//common:transcript",
+        "//persist/rdb_writer:rdb_test_parser",
+        "@googletest//:gtest_main",
+    ],
+)

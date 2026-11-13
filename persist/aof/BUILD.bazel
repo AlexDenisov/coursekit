@@ -1,0 +1,28 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "aof",
+    srcs = ["aof.cc"],
+    hdrs = ["aof.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//common:clock",
+        "//db/keyspace",
+        "//resp/encoder",
+        "//resp/parser",
+    ],
+)
+
+cc_test(
+    name = "aof_test",
+    size = "small",
+    srcs = ["aof_test.cc"],
+    deps = [
+        ":aof",
+        "//common:test_client",
+        "//db/expire",
+        "//db/lists",
+        "@googletest//:gtest_main",
+    ],
+)

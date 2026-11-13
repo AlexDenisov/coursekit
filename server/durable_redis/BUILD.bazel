@@ -1,0 +1,48 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
+cc_library(
+    name = "durable_redis_lib",
+    srcs = ["durable_redis.cc"],
+    hdrs = ["durable_redis.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:clock",
+        "//persist/aof",
+        "//persist/aof_rewrite",
+        "//persist/bgsave",
+        "//persist/rdb_reader",
+        "//repl/replica",
+        "//server/mini_redis:mini_redis_lib",
+    ],
+)
+
+cc_binary(
+    name = "durable_redis",
+    srcs = ["main.cc"],
+    deps = [":durable_redis_lib"],
+)
+
+cc_test(
+    name = "durable_redis_test",
+    size = "medium",
+    srcs = ["durable_redis_test.cc"],
+    deps = [
+        ":durable_redis_lib",
+        "//common:test_client",
+        "@googletest//:gtest_main",
+    ],
+)
+
+# Real Redis loads your dump.rdb, and your server replicates from a real Redis.
+#   bazel test //server/durable_redis:real_redis_test --test_output=all
+cc_test(
+    name = "real_redis_test",
+    size = "medium",
+    srcs = ["real_redis_test.cc"],
+    tags = ["manual"],
+    deps = [
+        ":durable_redis_lib",
+        "//common:test_client",
+        "@googletest//:gtest_main",
+    ],
+)

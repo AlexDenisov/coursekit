@@ -1,0 +1,27 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "blocking",
+    srcs = ["blocking.cc"],
+    hdrs = ["blocking.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//common:clock",
+        "//db/keyspace",
+        "//db/lists",
+        "//net/timers",
+        "//resp/encoder",
+    ],
+)
+
+cc_test(
+    name = "blocking_test",
+    size = "small",
+    srcs = ["blocking_test.cc"],
+    deps = [
+        ":blocking",
+        "//db/lists",
+        "@googletest//:gtest_main",
+    ],
+)

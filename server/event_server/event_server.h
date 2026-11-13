@@ -36,7 +36,8 @@ class EventServer {
   //   before sleeping: replies can appear for a client that wasn't the one running
   //             (Session::push); give every such client the same "write now, else watch
   //             for writing" treatment.
-  // Closing a client: stop watching it, then destroy it (which closes the socket).
+  // Closing a client: stop watching it, call the close hook, then destroy it (which
+  // closes the socket).
 
   void run() { loop_.run(); }
   void stop() { loop_.stop(); }  // thread-safe
@@ -45,6 +46,9 @@ class EventServer {
 
   // Called for every new client before it's served (the Messaging track uses it).
   void set_new_client_hook(std::function<void(Client&)> hook) { new_client_hook_ = std::move(hook); }
+  // Called once for every client that goes away, just before it's destroyed, so state
+  // keyed by Session* can be dropped (pub/sub subscriptions, WATCHes, BLPOP waits).
+  void set_close_hook(std::function<void(Client&)> hook) { close_hook_ = std::move(hook); }
 
  private:
   void accept_all();            // the listener's readable handler
@@ -60,6 +64,7 @@ class EventServer {
   Fd listener_;
   std::unordered_map<int, std::unique_ptr<Client>> clients_;  // by fd
   std::function<void(Client&)> new_client_hook_;
+  std::function<void(Client&)> close_hook_;
 };
 
 }  // namespace rd

@@ -1,0 +1,23 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "listpack",
+    srcs = ["listpack.cc"],
+    hdrs = ["listpack.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:check",
+        "//resp/parser",
+    ],
+)
+
+cc_test(
+    name = "listpack_test",
+    size = "small",
+    srcs = ["listpack_test.cc"],
+    deps = [
+        ":listpack",
+        "//common:rng",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -1,0 +1,24 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "transactions",
+    srcs = ["transactions.cc"],
+    hdrs = ["transactions.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//db/keyspace",
+        "//resp/encoder",
+    ],
+)
+
+cc_test(
+    name = "transactions_test",
+    size = "small",
+    srcs = ["transactions_test.cc"],
+    deps = [
+        ":transactions",
+        "//db/generic",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -92,16 +92,35 @@ explicitly.
 
 ## How the tests know what's right
 
-`tools/redis_reference.py` starts a throwaway `redis-server` and runs a case
-file from `tools/cases/` against it, printing every reply byte for byte:
+Every expected value was recorded from Redis 8.10 by a script in `tools/`,
+not computed by hand:
+
+| Script | Records |
+|---|---|
+| `redis_reference.py tools/cases/<x>.txt` | replies, byte for byte (`--inc`: the milestones' compatibility tables) |
+| `glob_reference.py` | which keys `KEYS <pattern>` matches |
+| `crc64_reference.py`, `blob_reference.py` | CRC-64s, intset and listpack bytes, dug out of `DUMP` |
+| `rdb_reference.py` | real `dump.rdb` files for the RDB reader |
+| `aof_reference.py` | what Redis writes to its AOF |
+| `messaging_reference.py` | pub/sub, MULTI/WATCH and BLPOP across several connections |
+
+Try your own commands the same way: add a line to a case file and re-run, or
+poke at a live server: `printf '*1\r\n$4\r\nPING\r\n' | nc localhost 6379`.
+
+Some tests use the real thing and are tagged `manual` (they skip if Redis
+isn't installed): `redis-cli` and `redis-benchmark` against your servers, your
+throughput next to `redis-server`'s, real Redis loading your `dump.rdb`, and
+your replica following a real primary.
 
 ```sh
-python3 tools/redis_reference.py tools/cases/strings.txt
+bazel test //server/hello_cli:redis_cli_test //server/mini_redis:real_clients_test \
+           //persist/rdb_writer:real_redis_loads_test //repl/replica:real_primary_test \
+           //server/durable_redis:real_redis_test --test_output=all
+bazel test -c opt //server/lean_redis:versus_redis_test --test_output=all
 ```
 
-That's the oracle. The tests contain its output, marked `// Redis:` or
-introduced by a comment naming the case file. Try your own commands the same
-way, or poke at a live server: `printf '*1\r\n$4\r\nPING\r\n' | nc localhost 6379`.
+After the last milestone, `docs/future_topics.md` has ideas for where to go
+next.
 
 ## Reference solutions
 

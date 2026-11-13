@@ -1,0 +1,120 @@
+# db/zsets
+## score formatting
+ZADD z 1 a 1.5 b -2 c 0.1 d 100 e 1e20 f 1e-5 g 123456789012 h 3.14159265358979 i inf j -inf k 0 l -0 m 1.0e3 n 0.30000000000000004 o
+ZSCORE z a
+ZSCORE z b
+ZSCORE z c
+ZSCORE z d
+ZSCORE z e
+ZSCORE z f
+ZSCORE z g
+ZSCORE z h
+ZSCORE z i
+ZSCORE z j
+ZSCORE z k
+ZSCORE z l
+ZSCORE z m
+ZSCORE z n
+ZSCORE z o
+ZADD z 1e300 p 5e-324 q 1.7976931348623157e308 r 12345678901234567890 s 0.000001 t 1e21 u 1e16 v 1e15 w
+ZSCORE z p
+ZSCORE z q
+ZSCORE z r
+ZSCORE z s
+ZSCORE z t
+ZSCORE z u
+ZSCORE z v
+ZSCORE z w
+## score parsing errors
+ZADD z nan a
+ZADD z abc a
+ZADD z 1 a 2
+ZADD z
+ZADD z +inf a
+ZSCORE z a
+ZADD z " 1" b
+ZADD z 1.5e b
+ZADD z 0x10 b
+ZINCRBY z 1 nope
+ZADD z inf c
+ZINCRBY z -inf c
+## zadd options
+ZADD z 1 a 2 b
+ZADD z NX 10 a 3 c
+ZSCORE z a
+ZADD z XX 10 a 4 d
+ZSCORE z a
+ZSCORE z d
+ZADD z CH 11 a 2 b 5 e
+ZADD z GT 5 a
+ZADD z GT CH 20 a
+ZADD z LT CH 30 a 1 b
+ZADD z NX XX 1 a
+ZADD z GT LT 1 a
+ZADD z NX GT 1 a
+ZADD z INCR 5 a
+ZADD z INCR 5 a 1 b
+ZADD z NX INCR 1 a
+ZADD z XX INCR 1 nope
+ZINCRBY z 2.5 a
+ZINCRBY z 1 new
+ZCARD z
+## range by index
+ZADD z 1 a 2 b 3 c 4 d
+ZRANGE z 0 -1
+ZRANGE z 1 2 WITHSCORES
+ZRANGE z -2 -1
+ZRANGE z 0 -1 REV
+ZRANGE z 0 0 REV WITHSCORES
+ZRANGE z 5 10
+ZRANGE z 0 -1 LIMIT 0 1
+ZRANGE missing 0 -1
+ZRANGE z a b
+## range by score
+ZADD z 1 a 2 b 3 c 4 d 5 e
+ZRANGE z 2 4 BYSCORE
+ZRANGE z (2 4 BYSCORE
+ZRANGE z 2 (4 BYSCORE WITHSCORES
+ZRANGE z -inf +inf BYSCORE LIMIT 1 2
+ZRANGE z 4 2 BYSCORE REV
+ZRANGE z +inf -inf BYSCORE REV LIMIT 0 2
+ZRANGE z 2 4 BYSCORE REV
+ZRANGE z x 4 BYSCORE
+ZRANGE z (x 4 BYSCORE
+ZRANGE z 1 2 BYSCORE LIMIT 0
+ZRANGE z 1 5 BYSCORE LIMIT 0 -1
+ZRANGE z 1 5 BYSCORE LIMIT -1 2
+ZRANGEBYSCORE z 2 4
+ZRANGEBYSCORE z (1 +inf WITHSCORES LIMIT 0 2
+ZCOUNT z 2 4
+ZCOUNT z (2 (4
+ZCOUNT z -inf +inf
+ZCOUNT z 10 20
+ZCOUNT z x 1
+## rank and rem
+ZADD z 10 a 20 b 30 c
+ZRANK z a
+ZRANK z c
+ZRANK z nope
+ZREVRANK z a
+ZRANK z b WITHSCORE
+ZREVRANK z b WITHSCORE
+ZRANK missing a
+ZREM z a nope
+ZREM z b c
+EXISTS z
+ZMSCORE z a
+ZADD z 1 a
+ZMSCORE z a nope
+## same score orders by member
+ZADD z 1 b 1 c 1 a 0 z
+ZRANGE z 0 -1
+ZRANK z c
+## wrongtype
+SET s v
+ZADD s 1 a
+ZSCORE s a
+ZRANGE s 0 -1
+ZADD z 1 a
+GET z
+TYPE z

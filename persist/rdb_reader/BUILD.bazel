@@ -1,0 +1,56 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "rdb_reader",
+    srcs = ["rdb_reader.cc"],
+    hdrs = ["rdb_reader.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//db/hashes",
+        "//db/keyspace",
+        "//db/lists",
+        "//db/sets",
+        "//db/zsets",
+        "//ds/intset",
+        "//ds/listpack",
+        "//persist/crc64",
+        "//persist/rdb_writer",
+    ],
+)
+
+cc_library(
+    name = "fixture",
+    testonly = True,
+    hdrs = ["fixture.h"],
+    deps = [
+        ":rdb_reader",
+        "@googletest//:gtest",
+    ],
+)
+
+cc_test(
+    name = "rdb_reader_test",
+    size = "small",
+    srcs = ["rdb_reader_test.cc"],
+    data = ["testdata/redis8_plain.rdb"],
+    deps = [
+        ":fixture",
+        ":rdb_reader",
+        "//persist/rdb_writer",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "optional_test",
+    size = "small",
+    srcs = ["optional_test.cc"],
+    data = ["testdata/redis8_lzf.rdb"],
+    deps = [
+        ":fixture",
+        ":rdb_reader",
+        "@googletest//:gtest_main",
+    ],
+)
+
+exports_files(["testdata/redis8_plain.rdb", "testdata/redis8_lzf.rdb"])

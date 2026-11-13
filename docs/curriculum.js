@@ -284,7 +284,7 @@ window.CURRICULUM = {
     "keyspace"
    ],
    "kind": "algo",
-   "about": "EXPIRE/PEXPIRE/TTL/PERSIST, SET EX; lazy expiry on access plus the active cycle that samples 20 keys and repeats while >25% are stale"
+   "about": "EXPIRE/PEXPIRE/TTL/PERSIST with NX/XX/GT/LT; the active cycle that samples 20 keys and repeats while more than 10% were stale"
   },
   {
    "id": "db/lists",
@@ -385,7 +385,7 @@ window.CURRICULUM = {
     "internals"
    ],
    "kind": "perf",
-   "about": "small hashes/sets/zsets/lists live in listpacks and intsets and convert past the *-max-listpack-* thresholds; OBJECT ENCODING matches real Redis"
+   "about": "listpack- and intset-backed hashes and sets (zsets optional) that convert past Redis 8's thresholds exactly as OBJECT ENCODING reports"
   },
   {
    "id": "db/eviction",
@@ -406,7 +406,7 @@ window.CURRICULUM = {
    ],
    "kind": "project",
    "milestone": true,
-   "about": "a leaderboard on sorted sets under maxmemory with eviction; redis-benchmark within 2x of real Redis, memory within 1.5x"
+   "about": "sorted sets and maxmemory eviction on Mini Redis, with CONFIG SET maxmemory; redis-benchmark within 2x of real Redis"
   },
   {
    "id": "persist/rdb_writer",
@@ -416,7 +416,7 @@ window.CURRICULUM = {
     "durability"
    ],
    "kind": "concept",
-   "about": "the RDB format: length encoding, int-encoded strings, opcodes for expiry and SELECT, the CRC-64 trailer; real Redis must load your file"
+   "about": "the RDB format: length and int-encoded strings byte-exact with Redis, legacy types, expiry opcodes, the CRC-64 trailer; real Redis loads your file"
   },
   {
    "id": "persist/rdb_reader",
@@ -426,7 +426,7 @@ window.CURRICULUM = {
     "durability"
    ],
    "kind": "concept",
-   "about": "load dump.rdb files written by real Redis and by your writer; reject a bad checksum; skip already-expired keys"
+   "about": "load dump.rdb files written by Redis 8 (listpacks, intsets, quicklists, LZF optional) and by your writer; reject bad checksums; skip expired keys"
   },
   {
    "id": "persist/bgsave",
@@ -476,7 +476,7 @@ window.CURRICULUM = {
     "durability"
    ],
    "kind": "concept",
-   "about": "REPLICAOF: handshake, full sync by RDB transfer, then the live command stream; partial resync after a disconnect; REPLCONF ACK"
+   "about": "REPLICAOF: handshake, full sync by RDB transfer, the live command stream, REPLCONF ACK, partial resync after a disconnect; follows a real Redis primary"
   },
   {
    "id": "server/durable_redis",
@@ -663,12 +663,6 @@ window.CURRICULUM = {
    "req"
   ],
   [
-   "db/strings",
-   "db/keyspace",
-   "req",
-   "the string commands move onto your dict"
-  ],
-  [
    "db/keyspace",
    "db/expire",
    "req"
@@ -705,21 +699,9 @@ window.CURRICULUM = {
    "req"
   ],
   [
-   "db/glob",
-   "db/generic",
-   "req",
-   "KEYS and SCAN MATCH"
-  ],
-  [
    "ds/dict_scan",
    "db/generic",
    "req"
-  ],
-  [
-   "db/expire",
-   "db/generic",
-   "part",
-   "only for RENAME keeps the TTL"
   ],
   [
    "server/event_server",
@@ -780,26 +762,6 @@ window.CURRICULUM = {
    "req"
   ],
   [
-   "db/lists",
-   "db/encodings",
-   "req"
-  ],
-  [
-   "db/hashes",
-   "db/encodings",
-   "req"
-  ],
-  [
-   "db/sets",
-   "db/encodings",
-   "req"
-  ],
-  [
-   "db/zsets",
-   "db/encodings",
-   "req"
-  ],
-  [
    "db/keyspace",
    "db/eviction",
    "req"
@@ -821,11 +783,6 @@ window.CURRICULUM = {
    "req"
   ],
   [
-   "db/encodings",
-   "server/lean_redis",
-   "req"
-  ],
-  [
    "db/eviction",
    "server/lean_redis",
    "req"
@@ -837,11 +794,6 @@ window.CURRICULUM = {
   ],
   [
    "db/keyspace",
-   "persist/rdb_writer",
-   "req"
-  ],
-  [
-   "db/expire",
    "persist/rdb_writer",
    "req"
   ],
@@ -859,12 +811,6 @@ window.CURRICULUM = {
    "db/sets",
    "persist/rdb_writer",
    "req"
-  ],
-  [
-   "db/zsets",
-   "persist/rdb_writer",
-   "idea",
-   "sorted sets in RDB are an optional section"
   ],
   [
    "persist/rdb_writer",
@@ -910,26 +856,10 @@ window.CURRICULUM = {
    "req"
   ],
   [
-   "persist/bgsave",
-   "persist/aof_rewrite",
-   "req",
-   "the same fork machinery"
-  ],
-  [
-   "repl/backlog",
-   "repl/replica",
-   "req"
-  ],
-  [
    "persist/rdb_reader",
    "repl/replica",
    "req",
    "full sync loads an RDB"
-  ],
-  [
-   "server/event_server",
-   "repl/replica",
-   "req"
   ],
   [
    "server/mini_redis",
@@ -1014,6 +944,211 @@ window.CURRICULUM = {
    "msg/blocking",
    "server/messaging_redis",
    "req"
+  ],
+  [
+   "net/nonblocking",
+   "net/client",
+   "req",
+   "read_available / write_available"
+  ],
+  [
+   "db/strings",
+   "db/keyspace",
+   "learn",
+   "port your string commands; no code shared"
+  ],
+  [
+   "resp/parser",
+   "db/keyspace",
+   "part",
+   "only parse_int64"
+  ],
+  [
+   "resp/encoder",
+   "db/keyspace",
+   "req"
+  ],
+  [
+   "cmd/dispatch",
+   "db/keyspace",
+   "req"
+  ],
+  [
+   "db/expire",
+   "db/generic",
+   "idea",
+   "SET ... PX from db/keyspace is enough for the tests"
+  ],
+  [
+   "resp/parser",
+   "ds/listpack",
+   "part",
+   "only parse_int64: which strings are stored as integers"
+  ],
+  [
+   "ds/dict",
+   "db/encodings",
+   "req"
+  ],
+  [
+   "ds/skiplist",
+   "db/encodings",
+   "part",
+   "only the optional CompactZSet"
+  ],
+  [
+   "db/hashes",
+   "db/encodings",
+   "learn",
+   "what a CompactHash would replace"
+  ],
+  [
+   "db/sets",
+   "db/encodings",
+   "learn"
+  ],
+  [
+   "db/encodings",
+   "server/lean_redis",
+   "learn",
+   "standalone; wiring it in is a follow-up"
+  ],
+  [
+   "db/zsets",
+   "persist/rdb_writer",
+   "req"
+  ],
+  [
+   "db/expire",
+   "persist/rdb_writer",
+   "learn",
+   "TTLs come from the keyspace"
+  ],
+  [
+   "ds/listpack",
+   "persist/rdb_reader",
+   "req",
+   "Redis 8 stores small values as listpacks"
+  ],
+  [
+   "ds/intset",
+   "persist/rdb_reader",
+   "req",
+   "small integer sets"
+  ],
+  [
+   "db/lists",
+   "persist/rdb_reader",
+   "req"
+  ],
+  [
+   "db/hashes",
+   "persist/rdb_reader",
+   "req"
+  ],
+  [
+   "db/sets",
+   "persist/rdb_reader",
+   "req"
+  ],
+  [
+   "db/zsets",
+   "persist/rdb_reader",
+   "req"
+  ],
+  [
+   "persist/crc64",
+   "persist/rdb_reader",
+   "req"
+  ],
+  [
+   "db/expire",
+   "persist/aof",
+   "req",
+   "the tests replay TTLs"
+  ],
+  [
+   "db/lists",
+   "persist/aof",
+   "req",
+   "the tests replay lists"
+  ],
+  [
+   "persist/bgsave",
+   "persist/aof_rewrite",
+   "learn",
+   "the same fork machinery"
+  ],
+  [
+   "net/event_loop",
+   "persist/aof_rewrite",
+   "req",
+   "reap the child from a timer"
+  ],
+  [
+   "db/lists",
+   "persist/aof_rewrite",
+   "req"
+  ],
+  [
+   "db/hashes",
+   "persist/aof_rewrite",
+   "req"
+  ],
+  [
+   "db/sets",
+   "persist/aof_rewrite",
+   "req"
+  ],
+  [
+   "db/zsets",
+   "persist/aof_rewrite",
+   "req"
+  ],
+  [
+   "repl/backlog",
+   "repl/replica",
+   "learn",
+   "the primary's side of PSYNC"
+  ],
+  [
+   "server/event_server",
+   "repl/replica",
+   "learn",
+   "the same non-blocking machinery"
+  ],
+  [
+   "net/event_loop",
+   "repl/replica",
+   "req"
+  ],
+  [
+   "net/nonblocking",
+   "repl/replica",
+   "req"
+  ],
+  [
+   "resp/parser",
+   "repl/replica",
+   "req",
+   "the replication stream is RESP"
+  ],
+  [
+   "persist/aof",
+   "server/durable_redis",
+   "req"
+  ],
+  [
+   "db/generic",
+   "msg/transactions",
+   "req",
+   "the tests use RENAME and FLUSHALL"
+  ],
+  [
+   "db/glob",
+   "db/generic",
+   "req",
+   "KEYS and SCAN MATCH"
   ]
  ],
  "presets": [
@@ -1069,5 +1204,5 @@ window.CURRICULUM = {
    "level": "intermediate"
   }
  ],
- "_hash": "3ba48780c294"
+ "_hash": "cb408f0d8718"
 };

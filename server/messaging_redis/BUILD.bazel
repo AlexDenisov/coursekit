@@ -1,0 +1,33 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
+cc_library(
+    name = "messaging_redis_lib",
+    srcs = ["messaging_redis.cc"],
+    hdrs = ["messaging_redis.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:clock",
+        "//msg/blocking",
+        "//msg/pubsub",
+        "//msg/transactions",
+        "//net/client",
+        "//server/mini_redis:mini_redis_lib",
+    ],
+)
+
+cc_binary(
+    name = "messaging_redis",
+    srcs = ["main.cc"],
+    deps = [":messaging_redis_lib"],
+)
+
+cc_test(
+    name = "messaging_redis_test",
+    size = "medium",
+    srcs = ["messaging_redis_test.cc"],
+    deps = [
+        ":messaging_redis_lib",
+        "//common:test_client",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -1,0 +1,49 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "rdb_writer",
+    srcs = ["rdb_writer.cc"],
+    hdrs = ["rdb_writer.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//db/hashes",
+        "//db/keyspace",
+        "//db/lists",
+        "//db/sets",
+        "//db/zsets",
+        "//persist/crc64",
+        "//resp/parser",
+    ],
+)
+
+cc_library(
+    name = "rdb_test_parser",
+    testonly = True,
+    hdrs = ["rdb_test_parser.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "rdb_writer_test",
+    size = "small",
+    srcs = ["rdb_writer_test.cc"],
+    deps = [
+        ":rdb_test_parser",
+        ":rdb_writer",
+        "@googletest//:gtest_main",
+    ],
+)
+
+# Real Redis loads your file. Skips if redis-server isn't installed.
+#   bazel test //persist/rdb_writer:real_redis_loads_test --test_output=all
+cc_test(
+    name = "real_redis_loads_test",
+    size = "small",
+    srcs = ["real_redis_loads_test.cc"],
+    tags = ["manual"],
+    deps = [
+        ":rdb_writer",
+        "//common:test_client",
+        "@googletest//:gtest_main",
+    ],
+)

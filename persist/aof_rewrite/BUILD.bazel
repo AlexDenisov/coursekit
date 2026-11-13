@@ -1,0 +1,34 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "aof_rewrite",
+    srcs = ["aof_rewrite.cc"],
+    hdrs = ["aof_rewrite.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//db/hashes",
+        "//db/keyspace",
+        "//db/lists",
+        "//db/sets",
+        "//db/zsets",
+        "//net/event_loop",
+        "//persist/aof",
+        "//resp/encoder",
+    ],
+)
+
+cc_test(
+    name = "aof_rewrite_test",
+    size = "small",
+    srcs = ["aof_rewrite_test.cc"],
+    deps = [
+        ":aof_rewrite",
+        "//db/expire",
+        "//db/hashes",
+        "//db/lists",
+        "//db/sets",
+        "//db/zsets",
+        "@googletest//:gtest_main",
+    ],
+)

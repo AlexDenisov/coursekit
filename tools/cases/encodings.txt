@@ -1,0 +1,102 @@
+# db/encodings: when Redis switches representations (OBJECT ENCODING after each step).
+## hash: 512 small fields stay listpack, the 513th converts (Redis 8's default)
+HSET h f0 v f1 v f2 v f3 v f4 v f5 v f6 v f7 v f8 v f9 v f10 v f11 v f12 v f13 v f14 v f15 v f16 v f17 v f18 v f19 v f20 v f21 v f22 v f23 v f24 v f25 v f26 v f27 v f28 v f29 v f30 v f31 v f32 v f33 v f34 v f35 v f36 v f37 v f38 v f39 v f40 v f41 v f42 v f43 v f44 v f45 v f46 v f47 v f48 v f49 v f50 v f51 v f52 v f53 v f54 v f55 v f56 v f57 v f58 v f59 v f60 v f61 v f62 v f63 v
+HSET h f64 v f65 v f66 v f67 v f68 v f69 v f70 v f71 v f72 v f73 v f74 v f75 v f76 v f77 v f78 v f79 v f80 v f81 v f82 v f83 v f84 v f85 v f86 v f87 v f88 v f89 v f90 v f91 v f92 v f93 v f94 v f95 v f96 v f97 v f98 v f99 v f100 v f101 v f102 v f103 v f104 v f105 v f106 v f107 v f108 v f109 v f110 v f111 v f112 v f113 v f114 v f115 v f116 v f117 v f118 v f119 v f120 v f121 v f122 v f123 v f124 v f125 v f126 v f127 v
+HSET h f128 v f129 v f130 v f131 v f132 v f133 v f134 v f135 v f136 v f137 v f138 v f139 v f140 v f141 v f142 v f143 v f144 v f145 v f146 v f147 v f148 v f149 v f150 v f151 v f152 v f153 v f154 v f155 v f156 v f157 v f158 v f159 v f160 v f161 v f162 v f163 v f164 v f165 v f166 v f167 v f168 v f169 v f170 v f171 v f172 v f173 v f174 v f175 v f176 v f177 v f178 v f179 v f180 v f181 v f182 v f183 v f184 v f185 v f186 v f187 v f188 v f189 v f190 v f191 v
+HSET h f192 v f193 v f194 v f195 v f196 v f197 v f198 v f199 v f200 v f201 v f202 v f203 v f204 v f205 v f206 v f207 v f208 v f209 v f210 v f211 v f212 v f213 v f214 v f215 v f216 v f217 v f218 v f219 v f220 v f221 v f222 v f223 v f224 v f225 v f226 v f227 v f228 v f229 v f230 v f231 v f232 v f233 v f234 v f235 v f236 v f237 v f238 v f239 v f240 v f241 v f242 v f243 v f244 v f245 v f246 v f247 v f248 v f249 v f250 v f251 v f252 v f253 v f254 v f255 v
+HSET h f256 v f257 v f258 v f259 v f260 v f261 v f262 v f263 v f264 v f265 v f266 v f267 v f268 v f269 v f270 v f271 v f272 v f273 v f274 v f275 v f276 v f277 v f278 v f279 v f280 v f281 v f282 v f283 v f284 v f285 v f286 v f287 v f288 v f289 v f290 v f291 v f292 v f293 v f294 v f295 v f296 v f297 v f298 v f299 v f300 v f301 v f302 v f303 v f304 v f305 v f306 v f307 v f308 v f309 v f310 v f311 v f312 v f313 v f314 v f315 v f316 v f317 v f318 v f319 v
+HSET h f320 v f321 v f322 v f323 v f324 v f325 v f326 v f327 v f328 v f329 v f330 v f331 v f332 v f333 v f334 v f335 v f336 v f337 v f338 v f339 v f340 v f341 v f342 v f343 v f344 v f345 v f346 v f347 v f348 v f349 v f350 v f351 v f352 v f353 v f354 v f355 v f356 v f357 v f358 v f359 v f360 v f361 v f362 v f363 v f364 v f365 v f366 v f367 v f368 v f369 v f370 v f371 v f372 v f373 v f374 v f375 v f376 v f377 v f378 v f379 v f380 v f381 v f382 v f383 v
+HSET h f384 v f385 v f386 v f387 v f388 v f389 v f390 v f391 v f392 v f393 v f394 v f395 v f396 v f397 v f398 v f399 v f400 v f401 v f402 v f403 v f404 v f405 v f406 v f407 v f408 v f409 v f410 v f411 v f412 v f413 v f414 v f415 v f416 v f417 v f418 v f419 v f420 v f421 v f422 v f423 v f424 v f425 v f426 v f427 v f428 v f429 v f430 v f431 v f432 v f433 v f434 v f435 v f436 v f437 v f438 v f439 v f440 v f441 v f442 v f443 v f444 v f445 v f446 v f447 v
+HSET h f448 v f449 v f450 v f451 v f452 v f453 v f454 v f455 v f456 v f457 v f458 v f459 v f460 v f461 v f462 v f463 v f464 v f465 v f466 v f467 v f468 v f469 v f470 v f471 v f472 v f473 v f474 v f475 v f476 v f477 v f478 v f479 v f480 v f481 v f482 v f483 v f484 v f485 v f486 v f487 v f488 v f489 v f490 v f491 v f492 v f493 v f494 v f495 v f496 v f497 v f498 v f499 v f500 v f501 v f502 v f503 v f504 v f505 v f506 v f507 v f508 v f509 v f510 v f511 v
+OBJECT ENCODING h
+HSET h f512 v
+OBJECT ENCODING h
+HDEL h f512 f511 f510
+OBJECT ENCODING h
+## hash: a 64-byte value is fine, 65 converts
+HSET h a xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+OBJECT ENCODING h
+HSET h b xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+OBJECT ENCODING h
+## hash: long field names count too
+HSET h fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff v
+OBJECT ENCODING h
+## set: integers make an intset
+SADD s 1 2 3
+OBJECT ENCODING s
+SADD s 9223372036854775807
+OBJECT ENCODING s
+SADD s abc
+OBJECT ENCODING s
+SREM s abc
+OBJECT ENCODING s
+## set: strings make a listpack
+SADD s a b
+OBJECT ENCODING s
+SADD s 1
+OBJECT ENCODING s
+## set: 512 integers stay intset, 513 converts
+SADD s 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63
+SADD s 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127
+SADD s 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144 145 146 147 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 186 187 188 189 190 191
+SADD s 192 193 194 195 196 197 198 199 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221 222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237 238 239 240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255
+SADD s 256 257 258 259 260 261 262 263 264 265 266 267 268 269 270 271 272 273 274 275 276 277 278 279 280 281 282 283 284 285 286 287 288 289 290 291 292 293 294 295 296 297 298 299 300 301 302 303 304 305 306 307 308 309 310 311 312 313 314 315 316 317 318 319
+SADD s 320 321 322 323 324 325 326 327 328 329 330 331 332 333 334 335 336 337 338 339 340 341 342 343 344 345 346 347 348 349 350 351 352 353 354 355 356 357 358 359 360 361 362 363 364 365 366 367 368 369 370 371 372 373 374 375 376 377 378 379 380 381 382 383
+SADD s 384 385 386 387 388 389 390 391 392 393 394 395 396 397 398 399 400 401 402 403 404 405 406 407 408 409 410 411 412 413 414 415 416 417 418 419 420 421 422 423 424 425 426 427 428 429 430 431 432 433 434 435 436 437 438 439 440 441 442 443 444 445 446 447
+SADD s 448 449 450 451 452 453 454 455 456 457 458 459 460 461 462 463 464 465 466 467 468 469 470 471 472 473 474 475 476 477 478 479 480 481 482 483 484 485 486 487 488 489 490 491 492 493 494 495 496 497 498 499 500 501 502 503 504 505 506 507 508 509 510 511
+SCARD s
+OBJECT ENCODING s
+SADD s 512
+OBJECT ENCODING s
+## set: an intset of 128 plus a string converts straight to hashtable
+SADD s 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127
+OBJECT ENCODING s
+SADD s x
+OBJECT ENCODING s
+## set: an intset of 127 plus a string becomes a listpack
+SADD s 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126
+SADD s x
+OBJECT ENCODING s
+## set: 128 strings stay listpack, 129 convert
+SADD s m0 m1 m2 m3 m4 m5 m6 m7 m8 m9 m10 m11 m12 m13 m14 m15 m16 m17 m18 m19 m20 m21 m22 m23 m24 m25 m26 m27 m28 m29 m30 m31
+SADD s m32 m33 m34 m35 m36 m37 m38 m39 m40 m41 m42 m43 m44 m45 m46 m47 m48 m49 m50 m51 m52 m53 m54 m55 m56 m57 m58 m59 m60 m61 m62 m63
+SADD s m64 m65 m66 m67 m68 m69 m70 m71 m72 m73 m74 m75 m76 m77 m78 m79 m80 m81 m82 m83 m84 m85 m86 m87 m88 m89 m90 m91 m92 m93 m94 m95
+SADD s m96 m97 m98 m99 m100 m101 m102 m103 m104 m105 m106 m107 m108 m109 m110 m111 m112 m113 m114 m115 m116 m117 m118 m119 m120 m121 m122 m123 m124 m125 m126 m127
+OBJECT ENCODING s
+SADD s m128
+OBJECT ENCODING s
+## set: a 65-byte member converts
+SADD s a
+SADD s yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+OBJECT ENCODING s
+## set: a 65-byte member into an intset
+SADD s 1 2
+SADD s yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+OBJECT ENCODING s
+## zset: 128 small members stay listpack, 129 convert
+ZADD z 0 m0 1 m1 2 m2 3 m3 4 m4 5 m5 6 m6 7 m7 8 m8 9 m9 10 m10 11 m11 12 m12 13 m13 14 m14 15 m15 16 m16 17 m17 18 m18 19 m19 20 m20 21 m21 22 m22 23 m23 24 m24 25 m25 26 m26 27 m27 28 m28 29 m29 30 m30 31 m31
+ZADD z 32 m32 33 m33 34 m34 35 m35 36 m36 37 m37 38 m38 39 m39 40 m40 41 m41 42 m42 43 m43 44 m44 45 m45 46 m46 47 m47 48 m48 49 m49 50 m50 51 m51 52 m52 53 m53 54 m54 55 m55 56 m56 57 m57 58 m58 59 m59 60 m60 61 m61 62 m62 63 m63
+ZADD z 64 m64 65 m65 66 m66 67 m67 68 m68 69 m69 70 m70 71 m71 72 m72 73 m73 74 m74 75 m75 76 m76 77 m77 78 m78 79 m79 80 m80 81 m81 82 m82 83 m83 84 m84 85 m85 86 m86 87 m87 88 m88 89 m89 90 m90 91 m91 92 m92 93 m93 94 m94 95 m95
+ZADD z 96 m96 97 m97 98 m98 99 m99 100 m100 101 m101 102 m102 103 m103 104 m104 105 m105 106 m106 107 m107 108 m108 109 m109 110 m110 111 m111 112 m112 113 m113 114 m114 115 m115 116 m116 117 m117 118 m118 119 m119 120 m120 121 m121 122 m122 123 m123 124 m124 125 m125 126 m126 127 m127
+OBJECT ENCODING z
+ZADD z 128 m128
+OBJECT ENCODING z
+## zset: a 65-byte member converts
+ZADD z 1 a
+OBJECT ENCODING z
+ZADD z 2 zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+OBJECT ENCODING z
+
+## hash: a listpack keeps insertion order
+HSET h b 1 a 2 c 3
+HGETALL h
+HSET h a 20
+HGETALL h
+HDEL h b
+HSET h b 10
+HGETALL h
+## set: a listpack keeps insertion order, an intset sorts
+SADD s z y x
+SMEMBERS s
+SADD t 3 1 2
+SMEMBERS t

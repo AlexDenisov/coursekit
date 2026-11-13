@@ -53,7 +53,7 @@ Redis's data model: dict with incremental rehash, typed values, expiry, SCAN.
 | `ds/dict` | Dict with incremental rehash | Redis's dict.c: chained buckets, power-of-two tables, rehashing a few buckets per operation so no command ever stalls |
 | `ds/dict_scan` | SCAN cursors | reverse-binary cursor increments: every key present for the whole scan is returned, even while the table grows or shrinks |
 | `db/keyspace` | Typed keyspace | move the strings onto your dict; typed values, WRONGTYPE, TYPE, OBJECT ENCODING; lookups that will later expire and track LRU |
-| `db/expire` | Expiry | EXPIRE/PEXPIRE/TTL/PERSIST, SET EX; lazy expiry on access plus the active cycle that samples 20 keys and repeats while >25% are stale |
+| `db/expire` | Expiry | EXPIRE/PEXPIRE/TTL/PERSIST with NX/XX/GT/LT; the active cycle that samples 20 keys and repeats while more than 10% were stale |
 | `db/lists` | Lists | LPUSH/RPUSH/LPOP/RPOP/LRANGE/LINDEX/LLEN/LTRIM; negative indices and out-of-range ranges; empty lists delete their key |
 | `db/hashes` | Hashes | HSET/HGET/HDEL/HGETALL/HLEN/HINCRBY on your dict; a dict inside a dict |
 | `db/sets` | Sets | SADD/SREM/SISMEMBER/SMEMBERS/SCARD and SINTER/SUNION/SDIFF (iterate the smallest set first) |
@@ -72,9 +72,9 @@ Why Redis is small and fast: skiplists, listpacks, intsets, approximate LRU.
 | `db/zsets` | Sorted sets | skiplist + dict: ZADD (NX/XX/GT/LT/INCR), ZSCORE, ZRANK, ZRANGE BYSCORE/REV/LIMIT; score formatting that matches Redis byte for byte |
 | `ds/intset` | Intset | a sorted array of 16/32/64-bit integers that upgrades its encoding in place; binary search; little-endian on disk |
 | `ds/listpack` | Listpack | one contiguous allocation of variable-length entries with back-lengths for reverse walks; why it replaced ziplist (cascading updates) |
-| `db/encodings` | Compact encodings | small hashes/sets/zsets/lists live in listpacks and intsets and convert past the *-max-listpack-* thresholds; OBJECT ENCODING matches real Redis |
+| `db/encodings` | Compact encodings | listpack- and intset-backed hashes and sets (zsets optional) that convert past Redis 8's thresholds exactly as OBJECT ENCODING reports |
 | `db/eviction` | maxmemory and approximate LRU | memory accounting, a 24-bit LRU clock, sampling with an eviction pool of 16; allkeys-lru, volatile-ttl; LFU's log counter (optional) |
-| `server/lean_redis` | ★ Lean Redis | a leaderboard on sorted sets under maxmemory with eviction; redis-benchmark within 2x of real Redis, memory within 1.5x |
+| `server/lean_redis` | ★ Lean Redis | sorted sets and maxmemory eviction on Mini Redis, with CONFIG SET maxmemory; redis-benchmark within 2x of real Redis |
 
 ## Durability
 
@@ -90,13 +90,13 @@ Survive kill -9 and keep a replica in sync: RDB, AOF, PSYNC.
 
 | Exercise | | What |
 |---|---|---|
-| `persist/rdb_writer` | RDB writer | the RDB format: length encoding, int-encoded strings, opcodes for expiry and SELECT, the CRC-64 trailer; real Redis must load your file |
-| `persist/rdb_reader` | RDB reader | load dump.rdb files written by real Redis and by your writer; reject a bad checksum; skip already-expired keys |
+| `persist/rdb_writer` | RDB writer | the RDB format: length and int-encoded strings byte-exact with Redis, legacy types, expiry opcodes, the CRC-64 trailer; real Redis loads your file |
+| `persist/rdb_reader` | RDB reader | load dump.rdb files written by Redis 8 (listpacks, intsets, quicklists, LZF optional) and by your writer; reject bad checksums; skip expired keys |
 | `persist/bgsave` | BGSAVE with fork | fork + copy-on-write snapshots, write to temp then rename, reap the child from a timer; why the parent must not rehash during a save |
 | `persist/aof` | Append-only file | log writes as RESP, appendfsync always/everysec/no, replay on startup through your parser, recover from a truncated tail |
 | `persist/aof_rewrite` | AOF rewrite | compact the log from a forked snapshot while new writes keep arriving; swap files atomically |
 | `repl/backlog` | Replication backlog | a ring buffer addressed by global replication offset: can this replica resume from offset N, or does it need a full sync? |
-| `repl/replica` | Replica and PSYNC | REPLICAOF: handshake, full sync by RDB transfer, then the live command stream; partial resync after a disconnect; REPLCONF ACK |
+| `repl/replica` | Replica and PSYNC | REPLICAOF: handshake, full sync by RDB transfer, the live command stream, REPLCONF ACK, partial resync after a disconnect; follows a real Redis primary |
 | `server/durable_redis` | ★ Durable Redis | kill -9 loses at most a second of writes; real Redis loads your dump.rdb; your replica follows a real Redis primary |
 
 ## Messaging

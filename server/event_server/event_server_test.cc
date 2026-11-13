@@ -126,6 +126,23 @@ TEST_F(EventServerTest, DisconnectedClientsAreFreed) {
   EXPECT_TRUE(eventually_clients(0)) << "closed connections are still in client_count()";
 }
 
+TEST_F(EventServerTest, CloseHookRunsOncePerClient) {
+  register_connection_commands(table_);
+  server_ = std::make_unique<EventServer>(table_, clock_);
+  std::atomic<int> opened{0}, closed{0};
+  server_->set_new_client_hook([&](Client&) { ++opened; });
+  server_->set_close_hook([&](Client&) { ++closed; });
+  port_ = server_->listen("127.0.0.1", 0);
+  thread_ = std::thread([this] { server_->run(); });
+  for (int i = 0; i < 5; ++i) {
+    TestClient c(port_);
+    EXPECT_EQ(c.call({"PING"}), "+PONG\r\n");
+  }
+  EXPECT_TRUE(eventually_clients(0));
+  EXPECT_EQ(opened, 5);
+  EXPECT_EQ(closed, 5);
+}
+
 TEST_F(EventServerTest, ProtocolErrorClosesOnlyThatClient) {
   start();
   TestClient bad(port_), good(port_);

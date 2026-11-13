@@ -1,0 +1,28 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "zsets",
+    srcs = ["zsets.cc"],
+    hdrs = ["zsets.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmd/dispatch",
+        "//db/keyspace",
+        "//ds/dict",
+        "//ds/skiplist",
+        "//resp/encoder",
+        "//resp/parser",
+    ],
+)
+
+cc_test(
+    name = "zsets_test",
+    size = "small",
+    srcs = ["zsets_test.cc"],
+    deps = [
+        ":zsets",
+        "//common:rng",
+        "//common:transcript",
+        "@googletest//:gtest_main",
+    ],
+)

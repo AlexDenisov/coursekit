@@ -1,0 +1,23 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "skiplist",
+    srcs = ["skiplist.cc"],
+    hdrs = ["skiplist.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:check",
+        "//common:rng",
+    ],
+)
+
+cc_test(
+    name = "skiplist_test",
+    size = "small",
+    srcs = ["skiplist_test.cc"],
+    deps = [
+        ":skiplist",
+        "//common:rng",
+        "@googletest//:gtest_main",
+    ],
+)

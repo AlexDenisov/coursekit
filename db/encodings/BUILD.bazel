@@ -1,0 +1,37 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "encodings",
+    srcs = ["encodings.cc"],
+    hdrs = ["encodings.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//ds/dict",
+        "//ds/intset",
+        "//ds/listpack",
+        "//ds/skiplist",
+        "//resp/parser",
+    ],
+)
+
+cc_test(
+    name = "encodings_test",
+    size = "small",
+    srcs = ["encodings_test.cc"],
+    deps = [
+        ":encodings",
+        "//common:rng",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "optional_test",
+    size = "small",
+    srcs = ["optional_test.cc"],
+    deps = [
+        ":encodings",
+        "//common:rng",
+        "@googletest//:gtest_main",
+    ],
+)
